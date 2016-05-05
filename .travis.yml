@@ -11,11 +11,11 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - travis_retry conda create --yes -n env_name python=$PYTHON_VERSION pip nose flake8
+  - travis_retry conda create --yes -n env_name python=$PYTHON_VERSION pip nose flake8 httpretty coverage
   - source activate env_name
   - travis_retry pip install .
 script:
-  - nosetests --with-doctest --with-coverage -v; fi
+  - nosetests --with-doctest --with-coverage
   - flake8 qiita_client setup.py
 after_success:
   - coveralls
