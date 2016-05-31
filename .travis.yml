@@ -28,5 +28,10 @@ install:
 script:
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_client setup.py
+addons:
+    postgresql: "9.3"
+services:
+    - redis-server
+    - postgresql
 after_success:
   - coveralls
