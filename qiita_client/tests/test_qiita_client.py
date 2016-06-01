@@ -8,7 +8,7 @@
 
 from unittest import TestCase, main
 from os.path import exists
-from os import remove, close
+from os import remove, close, environ
 from tempfile import mkstemp
 
 import httpretty
@@ -38,15 +38,14 @@ class UtilTests(TestCase):
 
 
 class QiitaClientTests(TestCase):
-    @httpretty.activate
     def setUp(self):
-        httpretty.register_uri(
-            httpretty.POST,
-            "https://test_server.com/qiita_db/authenticate/",
-            body='{"access_token": "token", "token_type": "Bearer", '
-                 '"expires_in": "3600"}')
+        server_cert = environ.get('QIITA_SERVER_CERT', None)
         self.tester = QiitaClient(
-            "https://test_server.com", 'client_id', 'client_secret')
+            "https://localhost:21174",
+            '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4',
+            'J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKhAmmC'
+            'WZuabe0O5Mp28s1',
+            server_cert=server_cert)
         self._clean_up_files = []
 
     def tearDown(self):
@@ -67,149 +66,149 @@ class QiitaClientTests(TestCase):
         self.assertEqual(obs._client_id, "client_id")
         self.assertEqual(obs._client_secret, "client_secret")
         self.assertTrue(obs._verify)
-
-    @httpretty.activate
-    def test_init_cert(self):
-        httpretty.register_uri(
-            httpretty.POST,
-            "https://test_server.com/qiita_db/authenticate/",
-            body='{"access_token": "token", "token_type": "Bearer", '
-                 '"expires_in": "3600"}')
-        fd, cert_fp = mkstemp()
-        close(fd)
-        with open(cert_fp, 'w') as f:
-            f.write(CERT_FP)
-
-        self._clean_up_files.append(cert_fp)
-
-        obs = QiitaClient(
-            "https://test_server.com", 'client_id', 'client_secret',
-            server_cert=cert_fp)
-
-        self.assertEqual(obs._server_url, "https://test_server.com")
-        self.assertEqual(obs._client_id, "client_id")
-        self.assertEqual(obs._client_secret, "client_secret")
-        self.assertEqual(obs._verify, cert_fp)
-
-    @httpretty.activate
-    def test_get(self):
-        httpretty.register_uri(
-            httpretty.GET,
-            "https://test_server.com/qiita_db/artifacts/1/type/",
-            body='{"type": "FASTQ", "success": true, "error": ""}')
-        obs = self.tester.get("/qiita_db/artifacts/1/type/")
-        exp = {"type": "FASTQ", "success": True, "error": ""}
-        self.assertEqual(obs, exp)
-
-    @httpretty.activate
-    def test_get_error(self):
-        httpretty.register_uri(
-            httpretty.GET,
-            "https://test_server.com/qiita_db/artifacts/1/type/",
-            status=500)
-        with self.assertRaises(RuntimeError):
-            self.tester.get("/qiita_db/artifacts/1/type/")
-
-    @httpretty.activate
-    def test_post(self):
-        httpretty.register_uri(
-            httpretty.POST,
-            "https://test_server.com/qiita_db/artifacts/1/type/",
-            body='{"type": "FASTQ", "success": true, "error": ""}')
-        obs = self.tester.post("/qiita_db/artifacts/1/type/", data="")
-        exp = {"type": "FASTQ", "success": True, "error": ""}
-        self.assertEqual(obs, exp)
-
-    @httpretty.activate
-    def test_post_error(self):
-        httpretty.register_uri(
-            httpretty.POST,
-            "https://test_server.com/qiita_db/artifacts/1/type/",
-            status=500)
-        with self.assertRaises(RuntimeError):
-            self.tester.post("/qiita_db/artifacts/1/type/")
-
-    @httpretty.activate
-    def test_patch(self):
-        httpretty.register_uri(
-            httpretty.PATCH,
-            "https://test_server.com/qiita_db/artifacts/1/filepaths/",
-            body='{"success": true, "error": ""}'
-        )
-        obs = self.tester.patch(
-            '/qiita_db/artifacts/1/filepaths/', 'add',
-            '/html_summary/', value='/path/to/html_summary')
-        exp = {"success": True, "error": ""}
-        self.assertEqual(obs, exp)
-
-    @httpretty.activate
-    def test_patch_error(self):
-        httpretty.register_uri(
-            httpretty.PATCH,
-            "https://test_server.com/qiita_db/artifacts/1/filepaths/",
-            status=500
-        )
-        with self.assertRaises(RuntimeError):
-            self.tester.patch(
-                '/qiita_db/artifacts/1/filepaths/', 'test',
-                '/html_summary/', value='/path/to/html_summary')
-
-    def test_patch_value_error(self):
-        # Add, replace or test
-        with self.assertRaises(ValueError):
-            self.tester.patch(
-                '/qiita_db/artifacts/1/filepaths/', 'add', '/html_summary/',
-                from_p='/fastq/')
-
-        # move or copy
-        with self.assertRaises(ValueError):
-            self.tester.patch(
-                '/qiita_db/artifacts/1/filepaths/', 'move',
-                '/html_summary/', value='/path/to/html_summary')
-
-    @httpretty.activate
-    def test_start_heartbeat(self):
-        httpretty.register_uri(
-            httpretty.POST,
-            "https://test_server.com/qiita_db/jobs/example-job/heartbeat/",
-            body='{"success": false, "error": ""}'
-        )
-        job_id = "example-job"
-        self.tester.start_heartbeat(job_id)
-
-    @httpretty.activate
-    def test_get_job_info(self):
-        httpretty.register_uri(
-            httpretty.GET,
-            "https://test_server.com/qiita_db/jobs/example-job",
-            body='{"success": false, "error": ""}'
-        )
-        job_id = "example-job"
-        self.tester.get_job_info(job_id)
-
-    @httpretty.activate
-    def test_update_job_step(self):
-        httpretty.register_uri(
-            httpretty.POST,
-            "https://test_server.com/qiita_db/jobs/example-job/step/",
-            body='{"success": true, "error": ""}'
-        )
-        job_id = "example-job"
-        new_step = "some new step"
-        self.tester.update_job_step(job_id, new_step)
-
-    @httpretty.activate
-    def test_complete_job(self):
-        httpretty.register_uri(
-            httpretty.POST,
-            "https://test_server.com/qiita_db/jobs/example-job/complete/",
-            body="")
-        job_id = "example-job"
-        ainfo = [
-            ("demultiplexed", "Demultiplexed",
-             [("fp1", "preprocessed_fasta"), ("fp2", "preprocessed_fastq")])]
-
-        self.tester.complete_job(job_id, True, artifacts_info=ainfo)
+    #
+    # @httpretty.activate
+    # def test_init_cert(self):
+    #     httpretty.register_uri(
+    #         httpretty.POST,
+    #         "https://test_server.com/qiita_db/authenticate/",
+    #         body='{"access_token": "token", "token_type": "Bearer", '
+    #              '"expires_in": "3600"}')
+    #     fd, cert_fp = mkstemp()
+    #     close(fd)
+    #     with open(cert_fp, 'w') as f:
+    #         f.write(CERT_FP)
+    #
+    #     self._clean_up_files.append(cert_fp)
+    #
+    #     obs = QiitaClient(
+    #         "https://test_server.com", 'client_id', 'client_secret',
+    #         server_cert=cert_fp)
+    #
+    #     self.assertEqual(obs._server_url, "https://test_server.com")
+    #     self.assertEqual(obs._client_id, "client_id")
+    #     self.assertEqual(obs._client_secret, "client_secret")
+    #     self.assertEqual(obs._verify, cert_fp)
+    #
+    # @httpretty.activate
+    # def test_get(self):
+    #     httpretty.register_uri(
+    #         httpretty.GET,
+    #         "https://test_server.com/qiita_db/artifacts/1/type/",
+    #         body='{"type": "FASTQ", "success": true, "error": ""}')
+    #     obs = self.tester.get("/qiita_db/artifacts/1/type/")
+    #     exp = {"type": "FASTQ", "success": True, "error": ""}
+    #     self.assertEqual(obs, exp)
+    #
+    # @httpretty.activate
+    # def test_get_error(self):
+    #     httpretty.register_uri(
+    #         httpretty.GET,
+    #         "https://test_server.com/qiita_db/artifacts/1/type/",
+    #         status=500)
+    #     with self.assertRaises(RuntimeError):
+    #         self.tester.get("/qiita_db/artifacts/1/type/")
+    #
+    # @httpretty.activate
+    # def test_post(self):
+    #     httpretty.register_uri(
+    #         httpretty.POST,
+    #         "https://test_server.com/qiita_db/artifacts/1/type/",
+    #         body='{"type": "FASTQ", "success": true, "error": ""}')
+    #     obs = self.tester.post("/qiita_db/artifacts/1/type/", data="")
+    #     exp = {"type": "FASTQ", "success": True, "error": ""}
+    #     self.assertEqual(obs, exp)
+    #
+    # @httpretty.activate
+    # def test_post_error(self):
+    #     httpretty.register_uri(
+    #         httpretty.POST,
+    #         "https://test_server.com/qiita_db/artifacts/1/type/",
+    #         status=500)
+    #     with self.assertRaises(RuntimeError):
+    #         self.tester.post("/qiita_db/artifacts/1/type/")
+    #
+    # @httpretty.activate
+    # def test_patch(self):
+    #     httpretty.register_uri(
+    #         httpretty.PATCH,
+    #         "https://test_server.com/qiita_db/artifacts/1/filepaths/",
+    #         body='{"success": true, "error": ""}'
+    #     )
+    #     obs = self.tester.patch(
+    #         '/qiita_db/artifacts/1/filepaths/', 'add',
+    #         '/html_summary/', value='/path/to/html_summary')
+    #     exp = {"success": True, "error": ""}
+    #     self.assertEqual(obs, exp)
+    #
+    # @httpretty.activate
+    # def test_patch_error(self):
+    #     httpretty.register_uri(
+    #         httpretty.PATCH,
+    #         "https://test_server.com/qiita_db/artifacts/1/filepaths/",
+    #         status=500
+    #     )
+    #     with self.assertRaises(RuntimeError):
+    #         self.tester.patch(
+    #             '/qiita_db/artifacts/1/filepaths/', 'test',
+    #             '/html_summary/', value='/path/to/html_summary')
+    #
+    # def test_patch_value_error(self):
+    #     # Add, replace or test
+    #     with self.assertRaises(ValueError):
+    #         self.tester.patch(
+    #             '/qiita_db/artifacts/1/filepaths/', 'add', '/html_summary/',
+    #             from_p='/fastq/')
+    #
+    #     # move or copy
+    #     with self.assertRaises(ValueError):
+    #         self.tester.patch(
+    #             '/qiita_db/artifacts/1/filepaths/', 'move',
+    #             '/html_summary/', value='/path/to/html_summary')
+    #
+    # @httpretty.activate
+    # def test_start_heartbeat(self):
+    #     httpretty.register_uri(
+    #         httpretty.POST,
+    #         "https://test_server.com/qiita_db/jobs/example-job/heartbeat/",
+    #         body='{"success": false, "error": ""}'
+    #     )
+    #     job_id = "example-job"
+    #     self.tester.start_heartbeat(job_id)
+    #
+    # @httpretty.activate
+    # def test_get_job_info(self):
+    #     httpretty.register_uri(
+    #         httpretty.GET,
+    #         "https://test_server.com/qiita_db/jobs/example-job",
+    #         body='{"success": false, "error": ""}'
+    #     )
+    #     job_id = "example-job"
+    #     self.tester.get_job_info(job_id)
+    #
+    # @httpretty.activate
+    # def test_update_job_step(self):
+    #     httpretty.register_uri(
+    #         httpretty.POST,
+    #         "https://test_server.com/qiita_db/jobs/example-job/step/",
+    #         body='{"success": true, "error": ""}'
+    #     )
+    #     job_id = "example-job"
+    #     new_step = "some new step"
+    #     self.tester.update_job_step(job_id, new_step)
+    #
+    # @httpretty.activate
+    # def test_complete_job(self):
+    #     httpretty.register_uri(
+    #         httpretty.POST,
+    #         "https://test_server.com/qiita_db/jobs/example-job/complete/",
+    #         body="")
+    #     job_id = "example-job"
+    #     ainfo = [
+    #         ("demultiplexed", "Demultiplexed",
+    #          [("fp1", "preprocessed_fasta"), ("fp2", "preprocessed_fastq")])]
+    #
+    #     self.tester.complete_job(job_id, True, artifacts_info=ainfo)
 
 
 CERT_FP = """-----BEGIN CERTIFICATE-----
