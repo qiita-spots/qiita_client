@@ -20,7 +20,7 @@ install:
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
-  - export QIITA_SERVER_CERT=$PWD/qiita/qiita_core/support_files/server.crt
+  - export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita_env/lib/python2.7/site-packages/qiita_core/support_files/server.crt
   - source deactivate
   - travis_retry conda create --yes -n env_name python=$PYTHON_VERSION pip nose flake8 httpretty coverage
   - source activate env_name
