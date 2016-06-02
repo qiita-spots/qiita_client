@@ -29,9 +29,9 @@ before_script:
   - source activate qiita_env
   - export MOI_CONFIG_FP=$HOME/miniconda3/envs/qiita_env/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg
   - qiita pet webserver start &
-  - sleep 5
-  - source activate env_name
 script:
+  - source activate env_name
+  - sleep 5 # give enough time to the webserver to start
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_client setup.py
 addons:
