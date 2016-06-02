@@ -20,12 +20,16 @@ install:
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
-  - qiita pet webserver start &
   - export QIITA_SERVER_CERT=$PWD/qiita/qiita_core/support_files/server.crt
   - source deactivate
   - travis_retry conda create --yes -n env_name python=$PYTHON_VERSION pip nose flake8 httpretty coverage
   - source activate env_name
   - travis_retry pip install .
+before_script:
+  - source activate qiita_env
+  - qiita pet webserver start &
+  - sleep 5
+  - source activate env_name
 script:
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_client setup.py
