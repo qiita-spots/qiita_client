@@ -27,6 +27,7 @@ install:
   - travis_retry pip install .
 before_script:
   - source activate qiita_env
+  - export MOI_CONFIG_FP=$PWD/qiita/qiita_core/support_files/config_test.cfg
   - qiita pet webserver start
   - sleep 5
   - source activate env_name
