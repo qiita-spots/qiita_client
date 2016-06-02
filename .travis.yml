@@ -27,7 +27,7 @@ install:
   - travis_retry pip install .
 before_script:
   - source activate qiita_env
-  - export MOI_CONFIG_FP=$PWD/miniconda3/envs/qiita_env/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg
+  - export MOI_CONFIG_FP=$HOME/miniconda3/envs/qiita_env/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg
   - ls -lh
   - which qiita
   - qiita pet webserver start
