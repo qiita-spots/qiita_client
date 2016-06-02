@@ -27,7 +27,7 @@ install:
   - travis_retry pip install .
 before_script:
   - source activate qiita_env
-  - qiita pet webserver start &
+  - qiita pet webserver start
   - sleep 5
   - source activate env_name
 script:
