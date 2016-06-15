@@ -1,7 +1,7 @@
 Qiita Client
 ============
 
-|Build Status|
+[![Build Status](https://travis-ci.org/qiita-spots/qiita_client.png?branch=master)](https://travis-ci.org/qiita-spots/qiita_client)
 
 Qiita (canonically pronounced *cheetah*) is an analysis environment for microbiome (and other "comparative -omics") datasets.
 
@@ -14,8 +14,5 @@ Also, if Qiita is running with the default server SSL certificate, you need to e
 
 ```bash
 
-export QIITA_SERVER_CERT=<QIITA_INSTALL_PATH>/qiita_core/support_files/server.crt 
+export QIITA_SERVER_CERT=<QIITA_INSTALL_PATH>/qiita_core/support_files/server.crt
 ```
-
-.. |Build Status| image:: https://travis-ci.org/qiita-spots/qiita_client.png?branch=master
-   :target: https://travis-ci.org/qiita-spots/qiita_client
