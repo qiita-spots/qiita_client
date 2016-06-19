@@ -24,7 +24,7 @@ classes = """
     Operating System :: MacOS :: MacOS X
 """
 
-with open('README.rst') as f:
+with open('README.md') as f:
     long_description = f.read()
 
 classifiers = [s.strip() for s in classes.split('\n') if s]
