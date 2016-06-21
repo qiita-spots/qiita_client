@@ -17,6 +17,24 @@ from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
 JOB_COMPLETED = False
 
 
+class ArtifactInfo(object):
+    """Output artifact information
+
+    Parameters
+    ----------
+    output_name : str
+        The command's output name
+    artifact_type : str
+        Qiita's artifact type
+    files : list of (str, str)
+        The list of (filepath, Qiita's filepath type) that form the artifact
+    """
+    def __init__(self, output_name, artifact_type, files):
+        self.output_name = output_name
+        self.artifact_type = artifact_type
+        self.files = files
+
+
 def _heartbeat(qclient, url):
     """Send the heartbeat calls to the server
 
@@ -66,9 +84,8 @@ def _format_payload(success, error_msg=None, artifacts_info=None):
     error_msg : str, optional
         If `success` is False, ther error message to include in the optional.
         If `success` is True, it is ignored
-    artifacts_info : list of (str, str, list of (str, str))
-        For each artifact that needs to be created, the command output name,
-        the artifact type and the list of files attached to the artifact.
+    artifacts_info : list of ArtifactInfo, optional
+        The list of output artifact information
 
     Returns
     -------
@@ -80,9 +97,10 @@ def _format_payload(success, error_msg=None, artifacts_info=None):
                                      'filepaths': list of (str, str)}}
     """
     if success and artifacts_info:
-        artifacts = {out_name: {'artifact_type': atype,
-                                'filepaths': filepaths}
-                     for out_name, atype, filepaths in artifacts_info}
+        artifacts = {
+            a_info.output_name: {'artifact_type': a_info.artifact_type,
+                                 'filepaths': a_info.files}
+            for a_info in artifacts_info}
     else:
         artifacts = None
 
@@ -412,14 +430,8 @@ class QiitaClient(object):
         error_msg : str, optional
             If `success` is False, ther error message to include.
             If `success` is True, it is ignored
-        artifacts_info : list of (str, str, list of (str, str))
-            For each artifact that needs to be created, the command output
-            name, the artifact type and the list of files attached to the
-            artifact.
-
-        See Also
-        --------
-        format_payload
+        artifacts_info : list of ArtifactInfo
+            The list of output artifact information
         """
         # Stop the heartbeat thread
         global JOB_COMPLETED

@@ -12,7 +12,8 @@ from os.path import basename, exists
 from tempfile import mkstemp
 from json import dumps
 
-from qiita_client.qiita_client import QiitaClient, _format_payload
+from qiita_client.qiita_client import (QiitaClient, _format_payload,
+                                       ArtifactInfo)
 from qiita_client.exceptions import BadRequestError
 
 CLIENT_ID = '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4'
@@ -20,11 +21,20 @@ CLIENT_SECRET = ('J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKh'
                  'AmmCWZuabe0O5Mp28s1')
 
 
+class ArtifactInfoTests(TestCase):
+    def test_init(self):
+        files = [("fp1", "preprocessed_fasta"), ("fp2", "preprocessed_fastq")]
+        obs = ArtifactInfo('demultiplexed', 'Demultiplexed', files)
+        self.assertEqual(obs.output_name, 'demultiplexed')
+        self.assertEqual(obs.artifact_type, 'Demultiplexed')
+        self.assertEqual(obs.files, files)
+
+
 class UtilTests(TestCase):
     def test_format_payload(self):
-        ainfo = [
-            ("demultiplexed", "Demultiplexed",
-             [("fp1", "preprocessed_fasta"), ("fp2", "preprocessed_fastq")])]
+        ainfo = [ArtifactInfo("demultiplexed", "Demultiplexed",
+                              [("fp1", "preprocessed_fasta"),
+                               ("fp2", "preprocessed_fastq")])]
         obs = _format_payload(True, artifacts_info=ainfo, error_msg="Ignored")
         exp = {'success': True, 'error': '',
                'artifacts':
@@ -189,8 +199,8 @@ class QiitaClientTests(TestCase):
             f.write('\n')
         self.clean_up_files.append(fp)
 
-        ainfo = [("demultiplexed", "Demultiplexed",
-                 [(fp, "preprocessed_fasta")])]
+        ainfo = [ArtifactInfo("demultiplexed", "Demultiplexed",
+                              [(fp, "preprocessed_fasta")])]
 
         obs = self.tester.complete_job(job_id, True, artifacts_info=ainfo)
         self.assertIsNone(obs)
