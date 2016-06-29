@@ -8,7 +8,7 @@
 
 from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
                          ForbiddenError)
-from .qiita_client import QiitaClient
+from .qiita_client import QiitaClient, ArtifactInfo
 
 __all__ = ["QiitaClient", "QiitaClientError", "NotFoundError",
-           "BadRequestError", "ForbiddenError"]
+           "BadRequestError", "ForbiddenError", "ArtifactInfo"]

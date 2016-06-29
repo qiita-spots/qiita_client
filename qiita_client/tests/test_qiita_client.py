@@ -29,6 +29,21 @@ class ArtifactInfoTests(TestCase):
         self.assertEqual(obs.artifact_type, 'Demultiplexed')
         self.assertEqual(obs.files, files)
 
+    def test_eq(self):
+        files = [("fp1", "preprocessed_fasta"), ("fp2", "preprocessed_fastq")]
+        obs = ArtifactInfo('demultiplexed', 'Demultiplexed', files)
+
+        self.assertTrue(obs == obs)
+        self.assertTrue(
+            obs == ArtifactInfo('demultiplexed', 'Demultiplexed', files))
+        files2 = [("fp2", "preprocessed_fastq"), ("fp1", "preprocessed_fasta")]
+        obs2 = ArtifactInfo('demultiplexed', 'Demultiplexed', files2)
+        self.assertTrue(obs == obs2)
+
+        self.assertFalse(obs == 1)
+        self.assertFalse(obs == ArtifactInfo('demux', 'Demultiplexed', files))
+        self.assertFalse(obs == ArtifactInfo('demultiplexed', 'Demux', files))
+
 
 class UtilTests(TestCase):
     def test_format_payload(self):

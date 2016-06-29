@@ -34,6 +34,15 @@ class ArtifactInfo(object):
         self.artifact_type = artifact_type
         self.files = files
 
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        if self.output_name != other.output_name or \
+                self.artifact_type != other.artifact_type or \
+                set(self.files) != set(other.files):
+            return False
+        return True
+
 
 def _heartbeat(qclient, url):
     """Send the heartbeat calls to the server
