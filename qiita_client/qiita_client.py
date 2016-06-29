@@ -43,6 +43,9 @@ class ArtifactInfo(object):
             return False
         return True
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 def _heartbeat(qclient, url):
     """Send the heartbeat calls to the server
