@@ -187,7 +187,7 @@ class QiitaClientTests(PluginTestCase):
         # Create a new job
         data = {
             'user': 'demo@microbio.me',
-            'command': 3,
+            'command': dumps(['QIIME', '1.9.1', 'Pick closed-reference OTUs']),
             'status': 'running',
             'parameters': dumps({"reference": 1,
                                  "sortmerna_e_value": 1,
