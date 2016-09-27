@@ -45,6 +45,9 @@ class QiitaCommand(object):
         The optional parameters of the command, keyed by parameter name. The
         values should be a 2-tuple in which the first element is the parameter
         name, and the second paramater is the default value
+    outputs : dict of {str: str}
+        The description of the outputs that this command generated. The
+        format is: {output_name: artifact_type}
     default_parameter_sets : dict of {str: dict of {str: str}}
         The default parameter sets of the command, keyed by parameter set name.
         The values should be a dictionary in which keys are the parameter names
@@ -58,7 +61,7 @@ class QiitaCommand(object):
         If `function` does not accept 4 parameters
     """
     def __init__(self, name, description, function, required_parameters,
-                 optional_parameters, default_parameter_sets=None):
+                 optional_parameters, outputs, default_parameter_sets=None):
         self.name = name
         self.description = description
 
@@ -81,6 +84,7 @@ class QiitaCommand(object):
         self.required_parameters = required_parameters
         self.optional_parameters = optional_parameters
         self.default_parameter_sets = default_parameter_sets
+        self.outputs = outputs
 
     def __call__(self, qclient, server_url, job_id, output_dir):
         return self.function(qclient, server_url, job_id, output_dir)
@@ -270,7 +274,7 @@ class QiitaTypePlugin(BaseQiitaPlugin):
             'Validate', 'Validates a new artifact', validate_func,
             {'template': ('prep_template', None),
              'files': ('string', None),
-             'artifact_type': ('string', None)}, {})
+             'artifact_type': ('string', None)}, {}, None)
 
         self._register_command(val_cmd)
 
@@ -278,7 +282,7 @@ class QiitaTypePlugin(BaseQiitaPlugin):
             'Generate HTML summary', 'Generates the HTML summary',
             html_generator_func,
             {'input_data': ('artifact',
-                            [a.name for a in self.artifact_types])}, {})
+                            [a.name for a in self.artifact_types])}, {}, None)
 
         self._register_command(html_cmd)
 
@@ -300,30 +304,15 @@ class QiitaPlugin(BaseQiitaPlugin):
 
     _plugin_type = "artifact transformation"
 
-    def register_command(self, command_name, function):
+    def register_command(self, command):
         """Registers a command in the plugin
-
-        `function` should be a callable that conforms to the signature:
-        function(qclient, job_id, job_parameters, output_dir)
-        where qclient is an instance of QiitaClient, job_id is a string with
-        the job identifier, job_parameters is a dictionary with the parameters
-        of the command and output_dir is a string with the output directory
 
         Parameters
         ----------
-        command_name : str
-            The command name
-        function : callable
-            The function that executed the command
-
-        Raises
-        ------
-        TypeError
-            If `function` is not callable
-        ValueError
-            If `function` does not accept 4 parameters
+        command: QiitaCommand
+            The command to be added to the plugin
         """
-        self._register_command(command_name, function)
+        self._register_command(command)
 
 
 CONF_TEMPLATE = """[main]

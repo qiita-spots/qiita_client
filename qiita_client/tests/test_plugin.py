@@ -7,14 +7,15 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-
-from os.path import isdir, join, exists, basename
+from os.path import isdir, exists, basename, join
 from os import remove
 from shutil import rmtree
+from json import dumps
+from tempfile import mkdtemp
 
 from qiita_client.testing import PluginTestCase
 from qiita_client import (QiitaPlugin, QiitaTypePlugin, QiitaCommand,
-                          QiitaArtifactType)
+                          QiitaArtifactType, ArtifactInfo)
 
 
 class QiitaCommandTest(TestCase):
@@ -23,6 +24,7 @@ class QiitaCommandTest(TestCase):
         self.exp_opt = {'p2': ('boolean', 'False'),
                         'p3': ('string', 'somestring')}
         self.exp_dflt = {'dflt1': {'p2': 'True', 'p3': 'anotherstring'}}
+        self.exp_out = {'out1': 'BIOM'}
 
     def test_init(self):
         # Create a test function
@@ -30,31 +32,32 @@ class QiitaCommandTest(TestCase):
             return 42
 
         obs = QiitaCommand("Test cmd", "Some description", func, self.exp_req,
-                           self.exp_opt, self.exp_dflt)
+                           self.exp_opt, self.exp_out, self.exp_dflt)
         self.assertEqual(obs.name, "Test cmd")
         self.assertEqual(obs.description, "Some description")
         self.assertEqual(obs.function, func)
         self.assertEqual(obs.required_parameters, self.exp_req)
         self.assertEqual(obs.optional_parameters, self.exp_opt)
+        self.assertEqual(obs.outputs, self.exp_out)
         self.assertEqual(obs.default_parameter_sets, self.exp_dflt)
 
         with self.assertRaises(TypeError):
             QiitaCommand("Name", "Desc", "func", self.exp_req, self.exp_opt,
-                         self.exp_dflt)
+                         self.exp_out, self.exp_dflt)
 
         def func(a, b, c):
             return 42
 
         with self.assertRaises(ValueError):
             QiitaCommand("Name", "Desc", func, self.exp_req, self.exp_opt,
-                         self.exp_dflt)
+                         self.exp_out, self.exp_dflt)
 
     def test_call(self):
         def func(a, b, c, d):
             return 42
 
         obs = QiitaCommand("Test cmd", "Some description", func, self.exp_req,
-                           self.exp_opt, self.exp_dflt)
+                           self.exp_opt, self.exp_out, self.exp_dflt)
         self.assertEqual(obs('a', 'b', 'c', 'd'), 42)
 
 
@@ -162,10 +165,53 @@ class QiitaTypePluginTest(PluginTestCase):
         # Check that it has been installed
         obs = self.qclient.get('/qiita_db/plugins/NewPlugin/1.0.0/')
         self.assertEqual(obs['name'], 'NewPlugin')
+        self.assertEqual(obs['version'], '1.0.0')
 
 
 class QiitaPluginTest(PluginTestCase):
-    pass
+    # Most of the functionility is being tested in the previous
+    # class. Here we are going to test that we can actually execute a job
+    def setUp(self):
+        self.outdir = mkdtemp()
+
+    def tearDown(self):
+        rmtree(self.outdir)
+
+    def test_call(self):
+        def func(qclient, job_id, job_params, working_dir):
+            fp = join(working_dir, 'test.fastq')
+            with open(fp, 'w') as f:
+                f.write('')
+            res = ArtifactInfo('out1', 'Demultiplexed',
+                               [[fp, 'preprocessed_fastq']])
+            return True, "", [res]
+
+        tester = QiitaPlugin("NewPlugin", "0.0.1", "description")
+        cmd = QiitaCommand("NewCmd", "Desc", func,
+                           {'p1': ('artifact', ['FASTQ'])},
+                           {'p2': ('string', 'dflt')},
+                           {'out1': 'Demultiplexed'})
+        tester.register_command(cmd)
+
+        tester.generate_config('env_script', 'start_script',
+                               server_cert=self.server_cert)
+        self.qclient.post('/apitest/reload_plugins/')
+        tester("https://localhost:21174", 'register', 'ignored')
+
+        obs = self.qclient.get('/qiita_db/plugins/NewPlugin/0.0.1/')
+        self.assertEqual(obs['name'], 'NewPlugin')
+        self.assertEqual(obs['version'], '0.0.1')
+        self.assertEqual(obs['commands'], ['NewCmd'])
+
+        # Create a new job
+        data = {'command': dumps(['NewPlugin', '0.0.1', 'NewCmd']),
+                'parameters': dumps({'p1': '1', 'p2': 'a'}),
+                'status': 'queued'}
+        job_id = self.qclient.post('/apitest/processing_job/',
+                                   data=data)['job']
+        tester("https://localhost:21174", job_id, self.outdir)
+        obs = self.qclient.get_job_info(job_id)
+        self.assertEqual(obs['status'], 'success')
 
 if __name__ == '__main__':
     main()
