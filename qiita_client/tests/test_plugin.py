@@ -99,8 +99,8 @@ class QiitaTypePluginTest(PluginTestCase):
         self.assertEqual(obs.name, "NewPlugin")
         self.assertEqual(obs.version, "1.0.0")
         self.assertEqual(obs.description, "Description")
-        self.assertItemsEqual(obs.task_dict.keys(),
-                              ['Validate', 'Generate HTML summary'])
+        self.assertEqual(set(obs.task_dict.keys()),
+                         {'Validate', 'Generate HTML summary'})
         self.assertEqual(obs.task_dict['Validate'].function, validate_func)
         self.assertEqual(obs.task_dict['Generate HTML summary'].function,
                          html_generator_func)
