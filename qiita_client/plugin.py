@@ -8,9 +8,12 @@
 
 import traceback
 import sys
-from os.path import exists, join, dirname, abspath
-from os import makedirs
+from string import ascii_letters, digits
+from random import SystemRandom
+from os.path import exists, join, expanduser
+from os import makedirs, environ
 from future import standard_library
+from json import dumps
 
 from qiita_client import QiitaClient
 
@@ -83,14 +86,60 @@ class QiitaCommand(object):
         return self.function(qclient, server_url, job_id, output_dir)
 
 
+class QiitaArtifactType(object):
+    """A Qiita artifact type
+
+        Parameters
+        ----------
+        name : str
+            The artifact type name
+        description : str
+            The artifact type description
+        can_be_submitted_to_ebi : bool
+            Whether the artifact type can be submitted to EBI or not
+        can_be_submitted_to_vamps : bool
+            Whether the artifact type can be submitted to VAMPS or not
+        filepath_types : list of (str, bool)
+            The list filepath types that the new artifact type supports, and
+            if they're required or not in an artifact instance of this type"""
+    def __init__(self, name, description, can_be_submitted_to_ebi,
+                 can_be_submitted_to_vamps, filepath_types):
+        self.name = name
+        self.description = description
+        self.ebi = can_be_submitted_to_ebi
+        self.vamps = can_be_submitted_to_vamps
+        self.fp_types = filepath_types
+
+
 class BaseQiitaPlugin(object):
-    def __init__(self, name, version, description, conf_fp=None):
+    def __init__(self, name, version, description, publications=None):
         self.name = name
         self.version = version
-        self.decription = description
-        self.conf_fp = conf_fp if conf_fp is not None else join(
-            dirname(abspath(__file__)), 'support_files', 'config_file.cfg')
+        self.description = description
+        self.publications = dumps(publications) if publications else ""
+
+        # Will hold the different commands
         self.task_dict = {}
+
+        # The configuration file
+        conf_dir = environ.get(
+            'QIITA_PLUGINS_DIR', join(expanduser('~'), '.qiita_plugins'))
+        self.conf_fp = join(conf_dir, "%s_%s.conf" % (self.name, self.version))
+
+    def generate_config(self, env_script, start_script, server_cert=None):
+        """Generates the plugin configuration file"""
+        sr = SystemRandom()
+        chars = ascii_letters + digits
+        client_id = ''.join(sr.choice(chars) for i in range(50))
+        client_secret = ''.join(sr.choice(chars) for i in range(255))
+
+        server_cert = server_cert if server_cert else ""
+
+        with open(self.conf_fp, 'w') as f:
+            f.write(CONF_TEMPLATE % (self.name, self.version, self.description,
+                                     env_script, start_script,
+                                     self._plugin_type, self.publications,
+                                     server_cert, client_id, client_secret))
 
     def _register_command(self, command):
         """Registers a command in the plugin
@@ -102,9 +151,31 @@ class BaseQiitaPlugin(object):
         """
         self.task_dict[command.name] = command
 
-    # def _install(self, qclient):
-    #     """Installs the plugin in Qiita"""
-    #     for cmd in self.task_dict.values():
+    def _install(self, qclient):
+        """Installs the plugin in Qiita"""
+        # Get the command information from qiita
+        info = qclient.get('/qiita_db/plugins/%s/%s/'
+                           % (self.name, self.version))
+
+        for cmd in self.task_dict.values():
+            if cmd.name in info['commands']:
+                qclient.post('/qiita_db/plugins/%s/%s/commands/%s/activate/'
+                             % (self.name, self.version,
+                                cmd.name.replace(' ', "%20")))
+            else:
+                req_params = {
+                    k: v if v[0] != 'artifact' else ['artifact:%s'
+                                                     % dumps(v[1]), None]
+                    for k, v in cmd.required_parameters.items()}
+
+                data = {'name': cmd.name,
+                        'description': cmd.description,
+                        'required_parameters': dumps(req_params),
+                        'optional_parameters': dumps(cmd.optional_parameters),
+                        'default_parameter_sets': dumps(
+                            cmd.default_parameter_sets)}
+                qclient.post('/qiita_db/plugins/%s/%s/commands/'
+                             % (self.name, self.version), data=data)
 
     def __call__(self, server_url, job_id, output_dir):
         """Runs the plugin and executed the assigned task
@@ -125,12 +196,12 @@ class BaseQiitaPlugin(object):
         """
         # Set up the Qiita Client
         config = ConfigParser()
-        with open(self.onf_fp, 'U') as conf_file:
+        with open(self.conf_fp, 'U') as conf_file:
             config.readfp(conf_file)
 
-        qclient = QiitaClient(server_url, config.get('main', 'CLIENT_ID'),
-                              config.get('main', 'CLIENT_SECRET'),
-                              server_cert=config.get('main', 'SERVER_CERT'))
+        qclient = QiitaClient(server_url, config.get('oauth2', 'CLIENT_ID'),
+                              config.get('oauth2', 'CLIENT_SECRET'),
+                              server_cert=config.get('oauth2', 'SERVER_CERT'))
 
         if job_id == 'register':
             self._install(qclient)
@@ -164,10 +235,18 @@ class QiitaTypePlugin(BaseQiitaPlugin):
 
     Parameters
     ----------
+    name : str
+        The plugin name
+    version : str
+        The plugin version
+    description : str
+        The plugin description
     validate_func : callable
         The function used to validate artifacts
     html_generator_func : callable
         The function used to generate the HTML generator
+    artifact_types : list of QiitaArtifactType
+        The artifact types defined in this plugin
 
     Notes
     -----
@@ -178,18 +257,48 @@ class QiitaTypePlugin(BaseQiitaPlugin):
     the job identifier, job_parameters is a dictionary with the parameters
     of the command and output_dir is a string with the output directory
     """
-    # List the available commands for a Qiita Type plugin
-    _valid_commands = {'Validate', 'Generate HTML summary'}
+    _plugin_type = "artifact definition"
 
-    def __init__(self, name, version, validate_func, html_generator_func):
-        super(QiitaTypePlugin, self).__init__()
+    def __init__(self, name, version, description, validate_func,
+                 html_generator_func, artifact_types, publications=None):
+        super(QiitaTypePlugin, self).__init__(name, version, description,
+                                              publications=publications)
 
-        self._register_command('Validate', validate_func)
-        self._register_command('Generate HTML summary', html_generator_func)
+        self.artifact_types = artifact_types
+
+        val_cmd = QiitaCommand(
+            'Validate', 'Validates a new artifact', validate_func,
+            {'template': ('prep_template', None),
+             'files': ('string', None),
+             'artifact_type': ('string', None)}, {})
+
+        self._register_command(val_cmd)
+
+        html_cmd = QiitaCommand(
+            'Generate HTML summary', 'Generates the HTML summary',
+            html_generator_func,
+            {'input_data': ('artifact',
+                            [a.name for a in self.artifact_types])}, {})
+
+        self._register_command(html_cmd)
+
+    def _install(self, qclient):
+        """Installs the plugin in Qiita"""
+        for at in self.artifact_types:
+            data = {'type_name': at.name,
+                    'description': at.description,
+                    'can_be_submitted_to_ebi': at.ebi,
+                    'can_be_submitted_to_vamps': at.vamps,
+                    'filepath_types': dumps(at.fp_types)}
+            qclient.post('/qiita_db/artifacts/types/', data=data)
+
+        super(QiitaTypePlugin, self)._install(qclient)
 
 
 class QiitaPlugin(BaseQiitaPlugin):
     """Represents a Qiita Plugin"""
+
+    _plugin_type = "artifact transformation"
 
     def register_command(self, command_name, function):
         """Registers a command in the plugin
@@ -215,3 +324,18 @@ class QiitaPlugin(BaseQiitaPlugin):
             If `function` does not accept 4 parameters
         """
         self._register_command(command_name, function)
+
+
+CONF_TEMPLATE = """[main]
+NAME = %s
+VERSION = %s
+DESCRIPTION = %s
+ENVIRONMENT_SCRIPT = %s
+START_SCRIPT = %s
+PLUGIN_TYPE = %s
+PUBLICATIONS = %s
+
+[oauth2]
+SERVER_CERT = %s
+CLIENT_ID = %s
+CLIENT_SECRET = %s"""

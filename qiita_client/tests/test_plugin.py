@@ -8,7 +8,13 @@
 
 from unittest import TestCase, main
 
-from qiita_client import QiitaPlugin, QiitaTypePlugin, QiitaCommand
+from os.path import isdir, join, exists, basename
+from os import remove
+from shutil import rmtree
+
+from qiita_client.testing import PluginTestCase
+from qiita_client import (QiitaPlugin, QiitaTypePlugin, QiitaCommand,
+                          QiitaArtifactType)
 
 
 class QiitaCommandTest(TestCase):
@@ -52,11 +58,113 @@ class QiitaCommandTest(TestCase):
         self.assertEqual(obs('a', 'b', 'c', 'd'), 42)
 
 
-class QiitaPluginTest(TestCase):
-    pass
+class QiitaArtifactTypeTest(TestCase):
+    def test_init(self):
+        obs = QiitaArtifactType('Name', 'Description', False, True,
+                                [('plain_text', False)])
+        self.assertEqual(obs.name, 'Name')
+        self.assertEqual(obs.description, 'Description')
+        self.assertFalse(obs.ebi)
+        self.assertTrue(obs.vamps)
+        self.assertEqual(obs.fp_types, [('plain_text', False)])
 
 
-class QiitaTypePluginTest(TestCase):
+class QiitaTypePluginTest(PluginTestCase):
+    def setUp(self):
+        self.clean_up_fp = []
+
+    def tearDown(self):
+        for fp in self.clean_up_fp:
+            if exists(fp):
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
+
+    def test_init(self):
+        def validate_func(a, b, c, d):
+            return 42
+
+        def html_generator_func(a, b, c, d):
+            return 42
+
+        atypes = [QiitaArtifactType('Name', 'Description', False, True,
+                                    [('plain_text', False)])]
+        obs = QiitaTypePlugin("NewPlugin", "1.0.0", "Description",
+                              validate_func, html_generator_func,
+                              atypes)
+        self.assertEqual(obs.name, "NewPlugin")
+        self.assertEqual(obs.version, "1.0.0")
+        self.assertEqual(obs.description, "Description")
+        self.assertItemsEqual(obs.task_dict.keys(),
+                              ['Validate', 'Generate HTML summary'])
+        self.assertEqual(obs.task_dict['Validate'].function, validate_func)
+        self.assertEqual(obs.task_dict['Generate HTML summary'].function,
+                         html_generator_func)
+        self.assertEqual(obs.artifact_types, atypes)
+        self.assertEqual(basename(obs.conf_fp), 'NewPlugin_1.0.0.conf')
+
+    def test_generate_config(self):
+        def validate_func(a, b, c, d):
+            return 42
+
+        def html_generator_func(a, b, c, d):
+            return 42
+        atypes = [QiitaArtifactType('Name', 'Description', False, True,
+                                    [('plain_text', False)])]
+        tester = QiitaTypePlugin("NewPlugin", "1.0.0", "Description",
+                                 validate_func, html_generator_func, atypes)
+
+        tester.generate_config('env_script', 'start_script')
+        self.assertTrue(exists(tester.conf_fp))
+        with open(tester.conf_fp, 'U') as f:
+            conf = f.readlines()
+
+        exp_lines = ['[main]\n',
+                     'NAME = NewPlugin\n',
+                     'VERSION = 1.0.0\n',
+                     'DESCRIPTION = Description\n',
+                     'ENVIRONMENT_SCRIPT = env_script\n',
+                     'START_SCRIPT = start_script\n',
+                     'PLUGIN_TYPE = artifact definition\n',
+                     'PUBLICATIONS = \n',
+                     '\n',
+                     '[oauth2]\n',
+                     'SERVER_CERT = \n']
+        # We will test the last 2 lines independently since they're variable
+        # in each test run
+        self.assertEqual(conf[:-2], exp_lines)
+        self.assertTrue(conf[-2].startswith('CLIENT_ID = '))
+        self.assertTrue(conf[-1].startswith('CLIENT_SECRET = '))
+
+    def test_call(self):
+        def validate_func(a, b, c, d):
+            return 42
+
+        def html_generator_func(a, b, c, d):
+            return 42
+
+        # Test the install procedure
+        atypes = [QiitaArtifactType('Name', 'Description', False, True,
+                                    [('plain_text', False)])]
+        tester = QiitaTypePlugin("NewPlugin", "1.0.0", "Description",
+                                 validate_func, html_generator_func, atypes)
+
+        # Generate the config file for the new plugin
+        tester.generate_config('env_script', 'start_script',
+                               server_cert=self.server_cert)
+        # Ask Qiita to reload the plugins
+        self.qclient.post('/apitest/reload_plugins/')
+
+        # Install the current plugin
+        tester("https://localhost:21174", 'register', 'ignored')
+
+        # Check that it has been installed
+        obs = self.qclient.get('/qiita_db/plugins/NewPlugin/1.0.0/')
+        self.assertEqual(obs['name'], 'NewPlugin')
+
+
+class QiitaPluginTest(PluginTestCase):
     pass
 
 if __name__ == '__main__':

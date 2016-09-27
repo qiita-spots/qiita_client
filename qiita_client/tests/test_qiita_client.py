@@ -14,6 +14,7 @@ from json import dumps
 
 from qiita_client.qiita_client import (QiitaClient, _format_payload,
                                        ArtifactInfo)
+from qiita_client.testing import PluginTestCase
 from qiita_client.exceptions import BadRequestError
 
 CLIENT_ID = '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4'
@@ -66,15 +67,7 @@ class UtilTests(TestCase):
         self.assertEqual(obs, exp)
 
 
-class QiitaClientTests(TestCase):
-    @classmethod
-    def tearDownClass(cls):
-        # Reset the test database
-        server_cert = environ.get('QIITA_SERVER_CERT', None)
-        qclient = QiitaClient("https://localhost:21174", CLIENT_ID,
-                              CLIENT_SECRET, server_cert=server_cert)
-        qclient.post("/apitest/reset/")
-
+class QiitaClientTests(PluginTestCase):
     def setUp(self):
         self.server_cert = environ.get('QIITA_SERVER_CERT', None)
         self.tester = QiitaClient("https://localhost:21174", CLIENT_ID,
