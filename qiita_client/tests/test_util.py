@@ -10,7 +10,7 @@ from unittest import TestCase, main
 from os import getcwd, close
 from tempfile import mkstemp
 
-from qp_target_gene.util import system_call, get_sample_names_by_run_prefix
+from qiita_client.util import system_call, get_sample_names_by_run_prefix
 
 
 class UtilTests(TestCase):
