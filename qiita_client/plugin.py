@@ -14,6 +14,7 @@ from os.path import exists, join, expanduser
 from os import makedirs, environ
 from future import standard_library
 from json import dumps
+import urllib
 
 from qiita_client import QiitaClient
 
@@ -33,10 +34,14 @@ class QiitaCommand(object):
     function : callable
         The function that executes the command. Should be a callable that
         conforms to the signature:
-            `function(qclient, job_id, job_parameters, output_dir)`
+        `(bool, str, [ArtifactInfo] = function(qclient, job_id, job_parameters,
+                                               output_dir)`
         where qclient is an instance of QiitaClient, job_id is a string with
         the job identifier, job_parameters is a dictionary with the parameters
-        of the command and output_dir is a string with the output directory
+        of the command and output_dir is a string with the output directory.
+        The function should return a boolean indicating if the command was
+        executed successfully or not, a string containing a message in case
+        of error, and a list of ArtifactInfo objects in case of success.
     required_parameters : dict of {str: (str, list of str)}
         The required parameters of the command, keyed by parameter name. The
         values should be a 2-tuple in which the first element is the parameter
@@ -131,7 +136,20 @@ class BaseQiitaPlugin(object):
         self.conf_fp = join(conf_dir, "%s_%s.conf" % (self.name, self.version))
 
     def generate_config(self, env_script, start_script, server_cert=None):
-        """Generates the plugin configuration file"""
+        """Generates the plugin configuration file
+
+        Parameters
+        ----------
+        env_script : str
+            The CLI call used to load the environment in which the plugin is
+            installed
+        start_script : str
+            The script used to start the plugin
+        server_cert : str, optional
+            If the Qiita server used does not have a valid certificate, the
+            path to the Qiita certificate so the plugin can connect over
+            HTTPS to it
+        """
         sr = SystemRandom()
         chars = ascii_letters + digits
         client_id = ''.join(sr.choice(chars) for i in range(50))
@@ -155,8 +173,8 @@ class BaseQiitaPlugin(object):
         """
         self.task_dict[command.name] = command
 
-    def _install(self, qclient):
-        """Installs the plugin in Qiita"""
+    def _register(self, qclient):
+        """Registers the plugin information in Qiita"""
         # Get the command information from qiita
         info = qclient.get('/qiita_db/plugins/%s/%s/'
                            % (self.name, self.version))
@@ -165,7 +183,7 @@ class BaseQiitaPlugin(object):
             if cmd.name in info['commands']:
                 qclient.post('/qiita_db/plugins/%s/%s/commands/%s/activate/'
                              % (self.name, self.version,
-                                cmd.name.replace(' ', "%20")))
+                                urllib.parse.quote(cmd.name)))
             else:
                 req_params = {
                     k: v if v[0] != 'artifact' else ['artifact:%s'
@@ -208,7 +226,7 @@ class BaseQiitaPlugin(object):
                               server_cert=config.get('oauth2', 'SERVER_CERT'))
 
         if job_id == 'register':
-            self._install(qclient)
+            self._register(qclient)
         else:
             # Request job information. If there is a problem retrieving the job
             # information, the QiitaClient already raises an error
@@ -256,10 +274,14 @@ class QiitaTypePlugin(BaseQiitaPlugin):
     -----
     Both `validate_func` and `html_generator_func` should be a callable
     that conforms to the signature:
-    function(qclient, job_id, job_parameters, output_dir)
+    `(bool, str, [ArtifactInfo] = function(qclient, job_id, job_parameters,
+                                           output_dir)`
     where qclient is an instance of QiitaClient, job_id is a string with
     the job identifier, job_parameters is a dictionary with the parameters
-    of the command and output_dir is a string with the output directory
+    of the command and output_dir is a string with the output directory.
+    The function should return a boolean indicating if the command was
+    executed successfully or not, a string containing a message in case
+    of error, and a list of ArtifactInfo objects in case of success.
     """
     _plugin_type = "artifact definition"
 
@@ -286,8 +308,8 @@ class QiitaTypePlugin(BaseQiitaPlugin):
 
         self._register_command(html_cmd)
 
-    def _install(self, qclient):
-        """Installs the plugin in Qiita"""
+    def _register(self, qclient):
+        """Registers the plugin information in Qiita"""
         for at in self.artifact_types:
             data = {'type_name': at.name,
                     'description': at.description,
@@ -296,7 +318,7 @@ class QiitaTypePlugin(BaseQiitaPlugin):
                     'filepath_types': dumps(at.fp_types)}
             qclient.post('/qiita_db/artifacts/types/', data=data)
 
-        super(QiitaTypePlugin, self)._install(qclient)
+        super(QiitaTypePlugin, self)._register(qclient)
 
 
 class QiitaPlugin(BaseQiitaPlugin):
