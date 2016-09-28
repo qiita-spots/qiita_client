@@ -22,6 +22,7 @@ class PluginTestCase(TestCase):
         cls.qclient = QiitaClient("https://localhost:21174", cls.client_id,
                                   cls.client_secret,
                                   server_cert=cls.server_cert)
+        cls.qclient.post('/apitest/reload_plugins/')
 
     @classmethod
     def tearDownClass(cls):
