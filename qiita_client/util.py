@@ -10,8 +10,6 @@ import pandas as pd
 
 from subprocess import Popen, PIPE
 
-JOB_COMPLETED = False
-
 
 def system_call(cmd):
     """Call command and return (stdout, stderr, return_value)
