@@ -7,13 +7,27 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os import getcwd, close
+from os import getcwd, close, remove
+from os.path import exists, isdir
+from shutil import rmtree
+
 from tempfile import mkstemp
 
 from qiita_client.util import system_call, get_sample_names_by_run_prefix
 
 
 class UtilTests(TestCase):
+    def setUp(self):
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
+
     def test_system_call(self):
         obs_out, obs_err, obs_val = system_call("pwd")
         self.assertEqual(obs_out, "%s\n" % getcwd())
