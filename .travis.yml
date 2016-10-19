@@ -16,7 +16,7 @@ install:
     'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate qiita_env
   - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
-  - pip install https://github.com/biocore/qiita/archive/master.zip
+  - pip install https://github.com/biocore/qiita/archive/master.zip --process-dependency-links
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
