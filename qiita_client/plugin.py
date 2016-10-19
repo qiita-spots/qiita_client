@@ -195,7 +195,8 @@ class BaseQiitaPlugin(object):
                         'required_parameters': dumps(req_params),
                         'optional_parameters': dumps(cmd.optional_parameters),
                         'default_parameter_sets': dumps(
-                            cmd.default_parameter_sets)}
+                            cmd.default_parameter_sets),
+                        'outputs': dumps(cmd.outputs)}
                 qclient.post('/qiita_db/plugins/%s/%s/commands/'
                              % (self.name, self.version), data=data)
 
