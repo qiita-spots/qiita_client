@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-
 from unittest import TestCase, main
 from os.path import isdir, exists, basename, join
 from os import remove
