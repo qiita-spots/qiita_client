@@ -32,6 +32,7 @@ before_script:
 script:
   - source activate env_name
   - sleep 5 # give enough time to the webserver to start
+  - redis-cli MONITOR &
   - python qiita_client/tests/test_plugin.py
   - nosetests --with-doctest --with-coverage -v
   - flake8 qiita_client setup.py
