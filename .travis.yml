@@ -16,9 +16,9 @@ install:
     'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate qiita_env
   - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
-  - pip install https://github.com/biocore/qiita/archive/master.zip --process-dependency-links
+  - pip install https://github.com/josenavas/QiiTa/archive/unmoi-job-completion.zip --process-dependency-links
   - ipython profile create qiita-general --parallel
-  - qiita-env start_cluster qiita-general
+  - ipcluster start --profile=qiita-general -n 4 &
   - qiita-env make --no-load-ontologies
   - export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita_env/lib/python2.7/site-packages/qiita_core/support_files/server.crt
   - source deactivate
@@ -28,11 +28,12 @@ install:
 before_script:
   - source activate qiita_env
   - export MOI_CONFIG_FP=$HOME/miniconda3/envs/qiita_env/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg
-  - qiita pet webserver start &
+  - qiita pet webserver --no-build-docs start &
 script:
   - source activate env_name
   - sleep 5 # give enough time to the webserver to start
-  - nosetests --with-doctest --with-coverage
+  - python qiita_client/tests/test_plugin.py
+  - nosetests --with-doctest --with-coverage -v
   - flake8 qiita_client setup.py
 addons:
     postgresql: "9.3"
