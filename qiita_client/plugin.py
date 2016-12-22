@@ -241,20 +241,16 @@ class BaseQiitaPlugin(object):
             if not exists(output_dir):
                 makedirs(output_dir)
             try:
-                print("CALLING THE TASK")
                 success, artifacts_info, error_msg = task(
                     qclient, job_id, job_info['parameters'], output_dir)
-                print("THE TASK SUCCEEDED")
             except Exception:
                 exc_str = repr(traceback.format_exception(*sys.exc_info()))
                 error_msg = ("Error executing %s:\n%s" % (task_name, exc_str))
                 success = False
                 artifacts_info = None
             # The job completed
-            print("CALLING COMPLETE THE JOB")
             qclient.complete_job(job_id, success, error_msg=error_msg,
                                  artifacts_info=artifacts_info)
-            print("COMPLETE THE JOB SUCCEEDED")
 
 
 class QiitaTypePlugin(BaseQiitaPlugin):
