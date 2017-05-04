@@ -210,8 +210,9 @@ class QiitaPluginTest(PluginTestCase):
         job_id = self.qclient.post('/apitest/processing_job/',
                                    data=data)['job']
         tester("https://localhost:21174", job_id, self.outdir)
-        obs = self.qclient.get_job_info(job_id)
-        self.assertEqual(obs['status'], 'success')
+
+        status = self._wait_for_running_job(job_id)
+        self.assertEqual(status, 'success')
 
 if __name__ == '__main__':
     main()

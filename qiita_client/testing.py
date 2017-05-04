@@ -8,6 +8,7 @@
 
 from unittest import TestCase
 from os import environ
+from time import sleep
 
 from qiita_client import QiitaClient
 
@@ -28,3 +29,29 @@ class PluginTestCase(TestCase):
     def tearDownClass(cls):
         # Reset the test database
         cls.qclient.post("/apitest/reset/")
+
+    def _wait_for_running_job(self, job_id):
+        """Waits until the given job is not in a running status
+
+        Parameters
+        ----------
+        job_id : str
+            The job it to wait for
+
+        Returns
+        -------
+        str
+            The status of the job
+
+        Notes
+        -----
+        This function only polls for five seconds. After those five seconds,
+        it returns whatever the last seen status for the given job
+        """
+        for i in range(10):
+            sleep(0.5)
+            status = self.qclient.get_job_info(job_id)['status']
+            if status != 'running':
+                break
+
+        return status
