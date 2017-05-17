@@ -233,5 +233,6 @@ class QiitaPluginTest(PluginTestCase):
         status = self._wait_for_running_job(job_id)
         self.assertEqual(status, 'success')
 
+
 if __name__ == '__main__':
     main()
