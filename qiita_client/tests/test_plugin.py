@@ -220,7 +220,10 @@ class QiitaPluginTest(PluginTestCase):
         obs = self.qclient.get('/qiita_db/plugins/NewPlugin/0.0.1/')
         self.assertEqual(obs['name'], 'NewPlugin')
         self.assertEqual(obs['version'], '0.0.1')
-        self.assertItemsEqual(obs['commands'], ['NewCmd', 'NewCmdAnalysis'])
+        # I can't use assertItemsEqual because it is not available in py3
+        # and I can't user assertCountEqual because it is not avaialable in py2
+        self.assertEqual(sorted(obs['commands']),
+                         sorted(['NewCmd', 'NewCmdAnalysis']))
 
         # Create a new job
         data = {'command': dumps(['NewPlugin', '0.0.1', 'NewCmd']),
