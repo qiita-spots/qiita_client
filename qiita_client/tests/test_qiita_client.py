@@ -101,7 +101,8 @@ class QiitaClientTests(PluginTestCase):
             'visibility': 'private',
             'ebi_run_accessions': None,
             'type': 'FASTQ',
-            'name': 'Raw data 1'}
+            'name': 'Raw data 1',
+            'analysis': None}
 
         # Files contain the full path, which it is hard to test, so get only
         # the basename of the files

@@ -57,6 +57,9 @@ class QiitaCommand(object):
         The default parameter sets of the command, keyed by parameter set name.
         The values should be a dictionary in which keys are the parameter names
         and values are the specific value for each parameter
+    analysis_only : bool, optional
+        If true, the command will only be available on the analysis pipeline.
+        Default: False
 
     Raises
     ------
@@ -66,7 +69,8 @@ class QiitaCommand(object):
         If `function` does not accept 4 parameters
     """
     def __init__(self, name, description, function, required_parameters,
-                 optional_parameters, outputs, default_parameter_sets=None):
+                 optional_parameters, outputs, default_parameter_sets=None,
+                 analysis_only=False):
         self.name = name
         self.description = description
 
@@ -90,6 +94,7 @@ class QiitaCommand(object):
         self.optional_parameters = optional_parameters
         self.default_parameter_sets = default_parameter_sets
         self.outputs = outputs
+        self.analysis_only = analysis_only
 
     def __call__(self, qclient, server_url, job_id, output_dir):
         return self.function(qclient, server_url, job_id, output_dir)
@@ -196,7 +201,8 @@ class BaseQiitaPlugin(object):
                         'optional_parameters': dumps(cmd.optional_parameters),
                         'default_parameter_sets': dumps(
                             cmd.default_parameter_sets),
-                        'outputs': dumps(cmd.outputs)}
+                        'outputs': dumps(cmd.outputs),
+                        'analysis_only': cmd.analysis_only}
                 qclient.post('/qiita_db/plugins/%s/%s/commands/'
                              % (self.name, self.version), data=data)
 

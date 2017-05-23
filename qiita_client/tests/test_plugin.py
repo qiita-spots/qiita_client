@@ -40,6 +40,19 @@ class QiitaCommandTest(TestCase):
         self.assertEqual(obs.optional_parameters, self.exp_opt)
         self.assertEqual(obs.outputs, self.exp_out)
         self.assertEqual(obs.default_parameter_sets, self.exp_dflt)
+        self.assertFalse(obs.analysis_only)
+
+        obs = QiitaCommand("Test cmd analysis", "Some description", func,
+                           self.exp_req, self.exp_opt, self.exp_out,
+                           self.exp_dflt, analysis_only=True)
+        self.assertEqual(obs.name, "Test cmd analysis")
+        self.assertEqual(obs.description, "Some description")
+        self.assertEqual(obs.function, func)
+        self.assertEqual(obs.required_parameters, self.exp_req)
+        self.assertEqual(obs.optional_parameters, self.exp_opt)
+        self.assertEqual(obs.outputs, self.exp_out)
+        self.assertEqual(obs.default_parameter_sets, self.exp_dflt)
+        self.assertTrue(obs.analysis_only)
 
         with self.assertRaises(TypeError):
             QiitaCommand("Name", "Desc", "func", self.exp_req, self.exp_opt,
@@ -193,6 +206,12 @@ class QiitaPluginTest(PluginTestCase):
                            {'out1': 'Demultiplexed'})
         tester.register_command(cmd)
 
+        a_cmd = QiitaCommand("NewCmdAnalysis", "Desc", func,
+                             {'p1': ('artifact', ['FASTQ'])},
+                             {'p2': ('string', 'dflt')},
+                             {'out1': 'Demultiplexed'})
+        tester.register_command(a_cmd)
+
         tester.generate_config('env_script', 'start_script',
                                server_cert=self.server_cert)
         self.qclient.post('/apitest/reload_plugins/')
@@ -201,7 +220,10 @@ class QiitaPluginTest(PluginTestCase):
         obs = self.qclient.get('/qiita_db/plugins/NewPlugin/0.0.1/')
         self.assertEqual(obs['name'], 'NewPlugin')
         self.assertEqual(obs['version'], '0.0.1')
-        self.assertEqual(obs['commands'], ['NewCmd'])
+        # I can't use assertItemsEqual because it is not available in py3
+        # and I can't user assertCountEqual because it is not avaialable in py2
+        self.assertEqual(sorted(obs['commands']),
+                         sorted(['NewCmd', 'NewCmdAnalysis']))
 
         # Create a new job
         data = {'command': dumps(['NewPlugin', '0.0.1', 'NewCmd']),
@@ -210,8 +232,10 @@ class QiitaPluginTest(PluginTestCase):
         job_id = self.qclient.post('/apitest/processing_job/',
                                    data=data)['job']
         tester("https://localhost:21174", job_id, self.outdir)
-        obs = self.qclient.get_job_info(job_id)
-        self.assertEqual(obs['status'], 'success')
+
+        status = self._wait_for_running_job(job_id)
+        self.assertEqual(status, 'success')
+
 
 if __name__ == '__main__':
     main()
