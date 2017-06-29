@@ -302,6 +302,7 @@ class QiitaTypePlugin(BaseQiitaPlugin):
         val_cmd = QiitaCommand(
             'Validate', 'Validates a new artifact', validate_func,
             {'template': ('prep_template', None),
+             'analysis': ('analysis', None),
              'files': ('string', None),
              'artifact_type': ('string', None)}, {}, None)
 
