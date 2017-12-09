@@ -31,11 +31,11 @@ class ArtifactInfo(object):
     archive : dict of {str: str}, optional
         A dict of features and their values to store. Format: {feature: values}
     """
-    def __init__(self, output_name, artifact_type, files, archive={}):
+    def __init__(self, output_name, artifact_type, files, archive=None):
         self.output_name = output_name
         self.artifact_type = artifact_type
         self.files = files
-        self.archive = archive
+        self.archive = archive if archive is not None else {}
 
     def __eq__(self, other):
         if type(self) != type(other):
