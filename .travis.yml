@@ -19,6 +19,10 @@ install:
   - pip install https://github.com/biocore/qiita/archive/master.zip --process-dependency-links
   - export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
   - export MOI_CONFIG_FP=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg
+  # as we don't need redbiom we are going to use the default redis port
+  - sed 's/PORT = 7777/PORT = 6379/g' $HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg > config_test.cfg
+  - export QIITA_CONFIG_FP=${PWD}/config_test.cfg
+  - export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
   - qiita-env make --no-load-ontologies
   - source deactivate
   - travis_retry conda create --yes -n qiita_client python=$PYTHON_VERSION pip nose flake8 coverage
