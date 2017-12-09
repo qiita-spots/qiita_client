@@ -45,6 +45,17 @@ class ArtifactInfoTests(TestCase):
         self.assertNotEqual(obs, ArtifactInfo('demux', 'Demultiplexed', files))
         self.assertNotEqual(obs, ArtifactInfo('demultiplexed', 'Demux', files))
 
+        obs3 = ArtifactInfo(
+            'demultiplexed', 'Demultiplexed', files, {'AA': ['aa'], 'CA': 'c'})
+        obs4 = ArtifactInfo(
+            'demultiplexed', 'Demultiplexed', files, {'AA': ['aa'], 'CA': 'c'})
+        obs5 = ArtifactInfo(
+            'demultiplexed', 'Demultiplexed', files, {'AA': ['aa'], 'CA': 'C'})
+        self.assertNotEqual(obs3, obs)
+        self.assertEqual(obs3, obs4)
+        self.assertNotEqual(obs3, obs5)
+        self.assertNotEqual(obs4, obs5)
+
 
 class UtilTests(TestCase):
     def test_format_payload(self):
@@ -57,7 +68,22 @@ class UtilTests(TestCase):
                    {'demultiplexed':
                        {'artifact_type': "Demultiplexed",
                         'filepaths': [("fp1", "preprocessed_fasta"),
-                                      ("fp2", "preprocessed_fastq")]}}}
+                                      ("fp2", "preprocessed_fastq")],
+                        'archive': {}}}}
+        self.assertEqual(obs, exp)
+
+        ainfo = [ArtifactInfo("demultiplexed", "Demultiplexed",
+                              [("fp1", "preprocessed_fasta"),
+                               ("fp2", "preprocessed_fastq")],
+                              {'AA': ['aa'], 'CA': 'ca'})]
+        obs = _format_payload(True, artifacts_info=ainfo, error_msg="Ignored")
+        exp = {'success': True, 'error': '',
+               'artifacts':
+                   {'demultiplexed':
+                       {'artifact_type': "Demultiplexed",
+                        'filepaths': [("fp1", "preprocessed_fasta"),
+                                      ("fp2", "preprocessed_fastq")],
+                        'archive': {'AA': ['aa'], 'CA': 'ca'}}}}
         self.assertEqual(obs, exp)
 
     def test_format_payload_error(self):

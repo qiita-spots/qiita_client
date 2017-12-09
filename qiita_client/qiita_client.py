@@ -28,18 +28,24 @@ class ArtifactInfo(object):
         Qiita's artifact type
     files : list of (str, str)
         The list of (filepath, Qiita's filepath type) that form the artifact
+    archive : dict of {str: str}, optional
+        A dict of features and their values to store. Format: {feature: values}
     """
-    def __init__(self, output_name, artifact_type, files):
+    def __init__(self, output_name, artifact_type, files, archive={}):
         self.output_name = output_name
         self.artifact_type = artifact_type
         self.files = files
+        self.archive = archive
 
     def __eq__(self, other):
         if type(self) != type(other):
             return False
         if self.output_name != other.output_name or \
                 self.artifact_type != other.artifact_type or \
-                set(self.files) != set(other.files):
+                set(self.files) != set(other.files) or \
+                self.archive != other.archive or \
+                any([self.archive[k] != other.archive[k]
+                     for k in self.archive]):
             return False
         return True
 
@@ -111,7 +117,8 @@ def _format_payload(success, error_msg=None, artifacts_info=None):
     if success and artifacts_info:
         artifacts = {
             a_info.output_name: {'artifact_type': a_info.artifact_type,
-                                 'filepaths': a_info.files}
+                                 'filepaths': a_info.files,
+                                 'archive': a_info.archive}
             for a_info in artifacts_info}
     else:
         artifacts = None
