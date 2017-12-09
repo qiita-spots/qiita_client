@@ -32,7 +32,7 @@ before_script:
   - source activate qiita
   - qiita pet webserver --no-build-docs start &
 script:
-  - source activate env_name
+  - source activate qiita_client
   - sleep 5 # give enough time to the webserver to start
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_client setup.py
