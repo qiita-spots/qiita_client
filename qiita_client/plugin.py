@@ -35,7 +35,7 @@ class QiitaCommand(object):
         The function that executes the command. Should be a callable that
         conforms to the signature:
         `(bool, str, [ArtifactInfo] = function(qclient, job_id, job_parameters,
-                                               output_dir)`
+                                               output_dir, archive)`
         where qclient is an instance of QiitaClient, job_id is a string with
         the job identifier, job_parameters is a dictionary with the parameters
         of the command and output_dir is a string with the output directory.
@@ -282,7 +282,7 @@ class QiitaTypePlugin(BaseQiitaPlugin):
     Both `validate_func` and `html_generator_func` should be a callable
     that conforms to the signature:
     `(bool, str, [ArtifactInfo] = function(qclient, job_id, job_parameters,
-                                           output_dir)`
+                                           output_dir, archive)`
     where qclient is an instance of QiitaClient, job_id is a string with
     the job identifier, job_parameters is a dictionary with the parameters
     of the command and output_dir is a string with the output directory.
