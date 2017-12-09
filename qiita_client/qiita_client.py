@@ -43,9 +43,7 @@ class ArtifactInfo(object):
         if self.output_name != other.output_name or \
                 self.artifact_type != other.artifact_type or \
                 set(self.files) != set(other.files) or \
-                self.archive != other.archive or \
-                any([self.archive[k] != other.archive[k]
-                     for k in self.archive]):
+                self.archive != other.archive:
             return False
         return True
 
@@ -112,7 +110,8 @@ def _format_payload(success, error_msg=None, artifacts_info=None):
         {'success': bool,
          'error': str,
          'artifacts': dict of {str: {'artifact_type': str,
-                                     'filepaths': list of (str, str)}}
+                                     'filepaths': list of (str, str),
+                                     'archive': {str: str}}}
     """
     if success and artifacts_info:
         artifacts = {
