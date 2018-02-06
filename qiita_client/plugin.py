@@ -114,7 +114,7 @@ class QiitaArtifactType(object):
         can_be_submitted_to_vamps : bool
             Whether the artifact type can be submitted to VAMPS or not
         is_user_uploadable : bool
-            Whether the artifact type can be submitted to VAMPS or not
+            Whether the artifact type can be uploaded directly by users
         filepath_types : list of (str, bool)
             The list filepath types that the new artifact type supports, and
             if they're required or not in an artifact instance of this type"""
