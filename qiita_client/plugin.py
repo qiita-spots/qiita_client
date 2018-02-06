@@ -113,15 +113,19 @@ class QiitaArtifactType(object):
             Whether the artifact type can be submitted to EBI or not
         can_be_submitted_to_vamps : bool
             Whether the artifact type can be submitted to VAMPS or not
+        is_user_uploadable : bool
+            Whether the artifact type can be submitted to VAMPS or not
         filepath_types : list of (str, bool)
             The list filepath types that the new artifact type supports, and
             if they're required or not in an artifact instance of this type"""
     def __init__(self, name, description, can_be_submitted_to_ebi,
-                 can_be_submitted_to_vamps, filepath_types):
+                 can_be_submitted_to_vamps, is_user_uploadable,
+                 filepath_types):
         self.name = name
         self.description = description
         self.ebi = can_be_submitted_to_ebi
         self.vamps = can_be_submitted_to_vamps
+        self.is_user_uploadable = is_user_uploadable
         self.fp_types = filepath_types
 
 
@@ -323,6 +327,7 @@ class QiitaTypePlugin(BaseQiitaPlugin):
                     'description': at.description,
                     'can_be_submitted_to_ebi': at.ebi,
                     'can_be_submitted_to_vamps': at.vamps,
+                    'is_user_uploadable': at.is_user_uploadable,
                     'filepath_types': dumps(at.fp_types)}
             qclient.post('/qiita_db/artifacts/types/', data=data)
 

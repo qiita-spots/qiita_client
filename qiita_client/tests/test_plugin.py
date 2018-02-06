@@ -76,12 +76,13 @@ class QiitaCommandTest(TestCase):
 
 class QiitaArtifactTypeTest(TestCase):
     def test_init(self):
-        obs = QiitaArtifactType('Name', 'Description', False, True,
+        obs = QiitaArtifactType('Name', 'Description', False, True, True,
                                 [('plain_text', False)])
         self.assertEqual(obs.name, 'Name')
         self.assertEqual(obs.description, 'Description')
         self.assertFalse(obs.ebi)
         self.assertTrue(obs.vamps)
+        self.assertTrue(obs.is_user_uploadable)
         self.assertEqual(obs.fp_types, [('plain_text', False)])
 
 
@@ -104,7 +105,7 @@ class QiitaTypePluginTest(PluginTestCase):
         def html_generator_func(a, b, c, d):
             return 42
 
-        atypes = [QiitaArtifactType('Name', 'Description', False, True,
+        atypes = [QiitaArtifactType('Name', 'Description', False, True, False,
                                     [('plain_text', False)])]
         obs = QiitaTypePlugin("NewPlugin", "1.0.0", "Description",
                               validate_func, html_generator_func,
@@ -126,7 +127,7 @@ class QiitaTypePluginTest(PluginTestCase):
 
         def html_generator_func(a, b, c, d):
             return 42
-        atypes = [QiitaArtifactType('Name', 'Description', False, True,
+        atypes = [QiitaArtifactType('Name', 'Description', False, True, False,
                                     [('plain_text', False)])]
         tester = QiitaTypePlugin("NewPlugin", "1.0.0", "Description",
                                  validate_func, html_generator_func, atypes)
@@ -161,7 +162,7 @@ class QiitaTypePluginTest(PluginTestCase):
             return 42
 
         # Test the install procedure
-        atypes = [QiitaArtifactType('Name', 'Description', False, True,
+        atypes = [QiitaArtifactType('Name', 'Description', False, True, False,
                                     [('plain_text', False)])]
         tester = QiitaTypePlugin("NewPlugin", "1.0.0", "Description",
                                  validate_func, html_generator_func, atypes)
