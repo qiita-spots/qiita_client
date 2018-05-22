@@ -219,11 +219,13 @@ class QiitaClient(object):
         # in case the Qiita server is not reachable (workers are busy), let's
         # try for 3 times with a 30 sec sleep between tries
         retries = 3
-        while retries > 0:
+        while retries >= 0:
             try:
                 r = req(*args, **kwargs)
                 break
             except requests.ConnectionError:
+                if retries <= 0:
+                    raise
                 time.sleep(30)
                 retries -= 1
         r.close()
