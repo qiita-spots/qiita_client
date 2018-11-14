@@ -15,6 +15,8 @@ from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
                          ForbiddenError)
 
 JOB_COMPLETED = False
+MAX_RETRIES = 5
+TIME_SLEEP = 300
 
 
 class ArtifactInfo(object):
@@ -67,16 +69,16 @@ def _heartbeat(qclient, url):
     before retrying another heartbeat. This is useful for updating the Qiita
     server without stopping long running jobs.
     """
-    retries = 2
+    retries = MAX_RETRIES
     while not JOB_COMPLETED and retries > 0:
         try:
             qclient.post(url, data='')
-            retries = 2
+            retries = MAX_RETRIES
         except requests.ConnectionError:
             # This error occurs when the Qiita server is not reachable. This
             # may occur when we are updating the server, and we don't want
             # the job to fail. In this case, we wait for 5 min and try again
-            time.sleep(300)
+            time.sleep(TIME_SLEEP)
             retries -= 1
         except QiitaClientError:
             # If we raised the error, we propagate it since it is a problem
@@ -218,7 +220,7 @@ class QiitaClient(object):
 
         # in case the Qiita server is not reachable (workers are busy), let's
         # try for 3 times with a 30 sec sleep between tries
-        retries = 3
+        retries = MAX_RETRIES
         while retries >= 0:
             try:
                 r = req(*args, **kwargs)
@@ -226,7 +228,7 @@ class QiitaClient(object):
             except requests.ConnectionError:
                 if retries <= 0:
                     raise
-                time.sleep(30)
+                time.sleep(TIME_SLEEP)
                 retries -= 1
         r.close()
         if r.status_code == 400:
@@ -288,7 +290,7 @@ class QiitaClient(object):
         communication problems.
         """
         url = self._server_url + url
-        retries = 2
+        retries = MAX_RETRIES
         while retries > 0:
             retries -= 1
             r = self._request_oauth2(req, url, verify=self._verify, **kwargs)
@@ -306,6 +308,7 @@ class QiitaClient(object):
                     return r.json()
                 except ValueError:
                     return None
+            time.sleep(TIME_SLEEP)
 
         raise RuntimeError(
             "Request '%s %s' did not succeed. Status code: %d. Message: %s"
