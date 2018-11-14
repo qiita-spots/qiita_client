@@ -15,7 +15,7 @@ from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
                          ForbiddenError)
 
 JOB_COMPLETED = False
-MAX_RETRIES = 5
+MAX_RETRIES = 3
 TIME_SLEEP = 300
 
 
