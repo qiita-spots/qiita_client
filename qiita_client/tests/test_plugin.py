@@ -183,7 +183,7 @@ class QiitaTypePluginTest(PluginTestCase):
 
 
 class QiitaPluginTest(PluginTestCase):
-    # Most of the functionility is being tested in the previous
+    # Most of the functionality is being tested in the previous
     # class. Here we are going to test that we can actually execute a job
     def setUp(self):
         self.outdir = mkdtemp()

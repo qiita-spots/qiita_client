@@ -49,7 +49,7 @@ class QiitaCommand(object):
     optional_parameters : dict of {str: (str, str)}
         The optional parameters of the command, keyed by parameter name. The
         values should be a 2-tuple in which the first element is the parameter
-        name, and the second paramater is the default value
+        name, and the second parameter is the default value
     outputs : dict of {str: str}
         The description of the outputs that this command generated. The
         format is: {output_name: artifact_type}

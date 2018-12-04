@@ -23,7 +23,7 @@ def system_call(cmd):
     Returns
     -------
     str, str, int
-        - The stabdard output of the command
+        - The standard output of the command
         - The standard error of the command
         - The exit status of the command
 

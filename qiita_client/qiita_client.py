@@ -133,14 +133,14 @@ def _format_payload(success, error_msg=None, artifacts_info=None):
 
 
 class QiitaClient(object):
-    """Client of the Qiita RESTapi
+    """Client of the Qiita REST API
 
     Parameters
     ----------
     server_url : str
         The url of the Qiita server
     client_id : str
-        The client id to conenct to the Qiita server
+        The client id to connect to the Qiita server
     client_secret : str
         The client secret id to connect to the Qiita server
     server_cert : str, optional
@@ -158,7 +158,7 @@ class QiitaClient(object):
         # The attribute self._verify is used to provide the parameter `verify`
         # to the get/post requests. According to their documentation (link:
         # http://docs.python-requests.org/en/latest/user/
-        # advanced/#ssl-cert-verification ) verify can be a boolean indicating
+        # advanced/#ssl-cert-verification) verify can be a boolean indicating
         # if certificate verification should be performed or not, or a
         # string with the path to the certificate file that needs to be used
         # to verify the identity of the server.
@@ -454,7 +454,7 @@ class QiitaClient(object):
 
     def complete_job(self, job_id, success, error_msg=None,
                      artifacts_info=None):
-        """Stops the heartbeat thread and send the job results to the server
+        """Stops the heartbeat thread and sends the job results to the server
 
         Parameters
         ----------
@@ -463,7 +463,7 @@ class QiitaClient(object):
         success : bool
             Whether the job completed successfully or not
         error_msg : str, optional
-            If `success` is False, ther error message to include.
+            If `success` is False, the error message to include.
             If `success` is True, it is ignored
         artifacts_info : list of ArtifactInfo
             The list of output artifact information

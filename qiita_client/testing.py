@@ -38,7 +38,7 @@ class PluginTestCase(TestCase):
         Parameters
         ----------
         job_id : str
-            The job it to wait for
+            The job id to wait for
 
         Returns
         -------
@@ -48,7 +48,7 @@ class PluginTestCase(TestCase):
         Notes
         -----
         This function only polls for five seconds. After those five seconds,
-        it returns whatever the last seen status for the given job
+        it returns whatever was the last seen status for the given job
         """
         for i in range(20):
             sleep(0.5)
