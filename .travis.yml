@@ -40,7 +40,7 @@ script:
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_client setup.py
 addons:
-    postgresql: "9.3"
+    postgresql: "9.5"
 services:
     - redis-server
     - postgresql
