@@ -138,6 +138,7 @@ class QiitaTypePluginTest(PluginTestCase):
             conf = f.readlines()
 
         env_cmd = 'source ~/virtualenv/python2.7/bin/activate; env_script'
+        print (env_cmd)
         exp_lines = ['[main]\n',
                      'NAME = NewPlugin\n',
                      'VERSION = 1.0.0\n',
