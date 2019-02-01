@@ -77,6 +77,7 @@ def _heartbeat(qclient, url):
             qclient.post(url, data='')
             retries = MAX_RETRIES
         except requests.ConnectionError:
+            print ('======> heartbeat')
             # This error occurs when the Qiita server is not reachable. This
             # may occur when we are updating the server, and we don't want
             # the job to fail. In this case, we wait for 5 min and try again
@@ -231,6 +232,7 @@ class QiitaClient(object):
             except requests.ConnectionError:
                 if retries <= 0:
                     raise
+                print ('======> _auth')
                 time.sleep(randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP))
                 retries -= 1
         if r.status_code == 400:
@@ -296,6 +298,9 @@ class QiitaClient(object):
         while retries > 0:
             retries -= 1
             r = self._request_oauth2(req, url, verify=self._verify, **kwargs)
+            print (r)
+            print (r.status_code)
+            print (r.text)
             r.close()
             # There are some error codes that the specification says that they
             # shouldn't be retried
@@ -310,6 +315,7 @@ class QiitaClient(object):
                     return r.json()
                 except ValueError:
                     return None
+            print ('======> retry')
             time.sleep(randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP))
 
         raise RuntimeError(
