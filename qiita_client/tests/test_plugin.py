@@ -132,19 +132,17 @@ class QiitaTypePluginTest(PluginTestCase):
         tester = QiitaTypePlugin("NewPlugin", "1.0.0", "Description",
                                  validate_func, html_generator_func, atypes)
 
-        tester.generate_config('env_script', 'start_script')
+        tester.generate_config('ls', 'echo')
         self.assertTrue(exists(tester.conf_fp))
         with open(tester.conf_fp, 'U') as f:
             conf = f.readlines()
 
-        env_cmd = 'source ~/virtualenv/python2.7/bin/activate; env_script'
-        print (env_cmd)
         exp_lines = ['[main]\n',
                      'NAME = NewPlugin\n',
                      'VERSION = 1.0.0\n',
                      'DESCRIPTION = Description\n',
-                     'ENVIRONMENT_SCRIPT = %s\n' % env_cmd,
-                     'START_SCRIPT = start_script\n',
+                     'ENVIRONMENT_SCRIPT = ls\n',
+                     'START_SCRIPT = echo\n',
                      'PLUGIN_TYPE = artifact definition\n',
                      'PUBLICATIONS = \n',
                      '\n',
