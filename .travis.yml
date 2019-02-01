@@ -3,7 +3,7 @@ language: python
 sudo: false
 env:
     - PYTHON_VERSION=2.7
-    - PYTHON_VERSION=3.5
+    - PYTHON_VERSION=3.6
 before_install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
@@ -16,7 +16,7 @@ install:
     pyzmq networkx pyparsing natsort mock future libgfortran
     'pandas>=0.18' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate qiita
-  - pip install -U pip
+  - pip install pip==18.1
   - pip install sphinx==1.5.5 sphinx-bootstrap-theme coveralls
   - pip install https://github.com/biocore/qiita/archive/dev.zip --process-dependency-links
   - export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
@@ -39,7 +39,7 @@ script:
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_client setup.py
 addons:
-    postgresql: "9.3"
+    postgresql: "9.5"
 services:
     - redis-server
     - postgresql

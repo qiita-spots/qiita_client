@@ -132,7 +132,7 @@ class QiitaTypePluginTest(PluginTestCase):
         tester = QiitaTypePlugin("NewPlugin", "1.0.0", "Description",
                                  validate_func, html_generator_func, atypes)
 
-        tester.generate_config('env_script', 'start_script')
+        tester.generate_config('ls', 'echo')
         self.assertTrue(exists(tester.conf_fp))
         with open(tester.conf_fp, 'U') as f:
             conf = f.readlines()
@@ -141,8 +141,8 @@ class QiitaTypePluginTest(PluginTestCase):
                      'NAME = NewPlugin\n',
                      'VERSION = 1.0.0\n',
                      'DESCRIPTION = Description\n',
-                     'ENVIRONMENT_SCRIPT = env_script\n',
-                     'START_SCRIPT = start_script\n',
+                     'ENVIRONMENT_SCRIPT = ls\n',
+                     'START_SCRIPT = echo\n',
                      'PLUGIN_TYPE = artifact definition\n',
                      'PUBLICATIONS = \n',
                      '\n',
@@ -168,7 +168,7 @@ class QiitaTypePluginTest(PluginTestCase):
                                  validate_func, html_generator_func, atypes)
 
         # Generate the config file for the new plugin
-        tester.generate_config('env_script', 'start_script',
+        tester.generate_config('ls', 'echo',
                                server_cert=self.server_cert)
         # Ask Qiita to reload the plugins
         self.qclient.post('/apitest/reload_plugins/')
@@ -213,7 +213,7 @@ class QiitaPluginTest(PluginTestCase):
                              {'out1': 'Demultiplexed'})
         tester.register_command(a_cmd)
 
-        tester.generate_config('env_script', 'start_script',
+        tester.generate_config('ls', 'echo',
                                server_cert=self.server_cert)
         self.qclient.post('/apitest/reload_plugins/')
         tester("https://localhost:21174", 'register', 'ignored')
