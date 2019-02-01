@@ -159,7 +159,6 @@ class BaseQiitaPlugin(object):
             path to the Qiita certificate so the plugin can connect over
             HTTPS to it
         """
-        print ('========>', env_script, start_script)
         sr = SystemRandom()
         chars = ascii_letters + digits
         client_id = ''.join(sr.choice(chars) for i in range(50))
