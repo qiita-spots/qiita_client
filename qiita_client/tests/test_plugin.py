@@ -215,7 +215,7 @@ class QiitaPluginTest(PluginTestCase):
                              {'out1': 'Demultiplexed'})
         tester.register_command(a_cmd)
 
-        tester.generate_config('env_script', 'start_script',
+        tester.generate_config('ls', 'ls',
                                server_cert=self.server_cert)
         self.qclient.post('/apitest/reload_plugins/')
         tester("https://localhost:21174", 'register', 'ignored')
