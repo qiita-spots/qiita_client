@@ -11,6 +11,7 @@ import requests
 import threading
 from json import dumps
 from random import randint
+import warnings
 
 from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
                          ForbiddenError)
@@ -80,7 +81,10 @@ def _heartbeat(qclient, url):
             # This error occurs when the Qiita server is not reachable. This
             # may occur when we are updating the server, and we don't want
             # the job to fail. In this case, we wait for 5 min and try again
-            time.sleep(randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP))
+            rtime = randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
+            warnings.warn("Sleep %d/%d for %d in heartbeat" % (
+                retries, MAX_RETRIES, rtime))
+            time.sleep(rtime)
             retries -= 1
         except QiitaClientError:
             # If we raised the error, we propagate it since it is a problem
@@ -231,7 +235,11 @@ class QiitaClient(object):
             except requests.ConnectionError:
                 if retries <= 0:
                     raise
-                time.sleep(randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP))
+                rtime = randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
+                warnings.warn(
+                    "Sleep %d/%d for %d in _request_oauth2: %d, %s" % (
+                        retries, MAX_RETRIES, rtime, r.status_code, r.text))
+                time.sleep(rtime)
                 retries -= 1
         if r.status_code == 400:
             try:
@@ -314,7 +322,11 @@ class QiitaClient(object):
                     return r.json()
                 except ValueError:
                     return None
-            time.sleep(randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP))
+            rtime = randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
+            warnings.warn(
+                "Sleep %d/%d for %d in _request_oauth2: %d, %s" % (
+                    retries, MAX_RETRIES, rtime, r.status_code, r.text))
+            time.sleep(rtime)
 
         raise RuntimeError(
             "Request '%s %s' did not succeed. Status code: %d. Message: %s"
