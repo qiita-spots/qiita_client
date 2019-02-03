@@ -84,6 +84,8 @@ def _heartbeat(qclient, url):
             rtime = randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
             warnings.warn("Sleep %d/%d for %d in heartbeat" % (
                 retries, MAX_RETRIES, rtime))
+            print("Sleep %d/%d for %d in heartbeat" % (
+                  retries, MAX_RETRIES, rtime))
             time.sleep(rtime)
             retries -= 1
         except QiitaClientError:
@@ -239,6 +241,8 @@ class QiitaClient(object):
                 warnings.warn(
                     "Sleep %d/%d for %d in _request_oauth2: %d, %s" % (
                         retries, MAX_RETRIES, rtime, r.status_code, r.text))
+                print("Sleep %d/%d for %d in _request_oauth2: %d, %s" % (
+                      retries, MAX_RETRIES, rtime, r.status_code, r.text))
                 time.sleep(rtime)
                 retries -= 1
         if r.status_code == 400:
@@ -326,6 +330,8 @@ class QiitaClient(object):
             warnings.warn(
                 "Sleep %d/%d for %d in _request_oauth2: %d, %s" % (
                     retries, MAX_RETRIES, rtime, r.status_code, r.text))
+            print("Sleep %d/%d for %d in _request_oauth2: %d, %s" % (
+                  retries, MAX_RETRIES, rtime, r.status_code, r.text))
             time.sleep(rtime)
 
         raise RuntimeError(
