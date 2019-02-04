@@ -86,7 +86,7 @@ def _heartbeat(qclient, url):
                 retries, MAX_RETRIES, rtime))
             print("Sleep %d/%d for %d in heartbeat" % (
                   retries, MAX_RETRIES, rtime))
-            time.sleep(rtime)
+            # time.sleep(rtime)
             retries -= 1
         except QiitaClientError:
             # If we raised the error, we propagate it since it is a problem
@@ -97,7 +97,7 @@ def _heartbeat(qclient, url):
             raise RuntimeError("Error executing heartbeat: %s" % str(e))
 
         # Perform the heartbeat every 30 seconds
-        time.sleep(30)
+        # time.sleep(30)
 
 
 def _format_payload(success, error_msg=None, artifacts_info=None):
@@ -243,7 +243,7 @@ class QiitaClient(object):
                         retries, MAX_RETRIES, rtime, r.status_code, r.text))
                 print("Sleep %d/%d for %d in _request_oauth2: %d, %s" % (
                       retries, MAX_RETRIES, rtime, r.status_code, r.text))
-                time.sleep(rtime)
+                # time.sleep(rtime)
                 retries -= 1
         if r.status_code == 400:
             try:
@@ -332,7 +332,7 @@ class QiitaClient(object):
                     retries, MAX_RETRIES, rtime, r.status_code, r.text))
             print("Sleep %d/%d for %d in _request_oauth2: %d, %s" % (
                   retries, MAX_RETRIES, rtime, r.status_code, r.text))
-            time.sleep(rtime)
+            # time.sleep(rtime)
 
         raise RuntimeError(
             "Request '%s %s' did not succeed. Status code: %d. Message: %s"
