@@ -36,7 +36,7 @@ before_script:
 script:
   - source activate qiita_client
   - sleep 5 # give enough time to the webserver to start
-  - find ~
+  - find ~ | grep -v ruby | grep -v node_modules | grep -v pypy | grep -v tcl8 | grep -v 'pkgs'
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_client setup.py
 addons:
