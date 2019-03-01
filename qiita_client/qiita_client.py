@@ -203,11 +203,18 @@ class QiitaClient(object):
         data = {'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'grant_type': 'client'}
+        logger.debug('data = %s' % data)
+        logger.debug('authenticate_url = %s' % self._authenticate_url)
+        logger.debug('verify = %s' % self._verify)
+        logger.debug('Posting...')
+        logger.debug('Timeout set to 90 seconds...')
         r = requests.post(self._authenticate_url, verify=self._verify,
-                          data=data)
+                          data=data, timeout=90)
+        logger.debug('status code = %d' % r.status_code)
         if r.status_code != 200:
             raise ValueError("Can't authenticate with the Qiita server")
         self._token = r.json()['access_token']
+        logger.debug('token = %s' % self._token)
 
     def _request_oauth2(self, req, *args, **kwargs):
         """Executes a request using OAuth2 authorization
