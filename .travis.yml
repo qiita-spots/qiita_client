@@ -18,7 +18,7 @@ install:
   - source activate qiita
   - pip install pip==18.1
   - pip install sphinx==1.5.5 sphinx-bootstrap-theme coveralls
-  - pip install https://github.com/charles-cowart/qiita/archive/dev.zip --process-dependency-links
+  - pip install https://github.com/biocore/qiita/archive/dev.zip --process-dependency-links
   - export QIITA_SERVER_CERT=$HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/server.crt
   # as we don't need redbiom we are going to use the default redis port
   - sed 's/PORT = 7777/PORT = 6379/g' $HOME/miniconda3/envs/qiita/lib/python2.7/site-packages/qiita_core/support_files/config_test.cfg > config_test.cfg
