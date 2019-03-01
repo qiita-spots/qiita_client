@@ -15,7 +15,11 @@ from os import makedirs, environ
 from future import standard_library
 from json import dumps
 import urllib
-from qiita_client import QiitaClient, logger
+from qiita_client import QiitaClient
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 with standard_library.hooks():
     from configparser import ConfigParser

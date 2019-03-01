@@ -14,11 +14,10 @@ from .plugin import (QiitaCommand, QiitaPlugin, QiitaTypePlugin,
 
 import logging
 
-logger = logging.getLogger()
 handler = logging.StreamHandler()
 fmt_str = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-formatter = logging.Formatter(fmt_str)
-handler.setFormatter(formatter)
+handler.setFormatter(logging.Formatter(fmt_str))
+logger = logging.getLogger(__name__)
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
