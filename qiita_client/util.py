@@ -10,7 +10,7 @@ import pandas as pd
 
 from subprocess import Popen, PIPE
 
-from . import logger
+from qiita_client import logger
 
 
 def system_call(cmd):

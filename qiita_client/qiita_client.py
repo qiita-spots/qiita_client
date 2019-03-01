@@ -12,7 +12,7 @@ import threading
 from json import dumps
 from random import randint
 
-from . import logger
+from qiita_client import logger
 
 from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
                          ForbiddenError)

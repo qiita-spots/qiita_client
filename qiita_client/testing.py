@@ -10,9 +10,7 @@ from unittest import TestCase
 from os import environ
 from time import sleep
 
-from qiita_client import QiitaClient
-
-from . import logger
+from qiita_client import QiitaClient, logger
 
 
 class PluginTestCase(TestCase):
