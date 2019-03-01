@@ -15,6 +15,7 @@ from os import makedirs, environ
 from future import standard_library
 from json import dumps
 import urllib
+from . import logger
 
 from qiita_client import QiitaClient
 

@@ -10,6 +10,8 @@ import pandas as pd
 
 from subprocess import Popen, PIPE
 
+from . import logger
+
 
 def system_call(cmd):
     """Call command and return (stdout, stderr, return_value)

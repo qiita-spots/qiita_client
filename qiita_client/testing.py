@@ -12,6 +12,8 @@ from time import sleep
 
 from qiita_client import QiitaClient
 
+from . import logger
+
 
 class PluginTestCase(TestCase):
     @classmethod
