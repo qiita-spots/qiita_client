@@ -34,6 +34,9 @@ def system_call(cmd):
     the authors of this function to port it to Qiita and keep it under BSD
     license.
     """
+    logger.debug('Entered system_call()')
+    # TODO: This may need to be reviewed against the Qiita version of this
+    # method.
     proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
                  stderr=PIPE)
     # Communicate pulls all stdout/stderr from the PIPEs
@@ -61,7 +64,7 @@ def get_sample_names_by_run_prefix(mapping_file):
     ValueError
         If there is more than 1 sample per run_prefix
     """
-
+    logger.debug('Entered get_sample_names_by_run_prefix()')
     qiime_map = pd.read_csv(mapping_file, delimiter='\t', dtype=str,
                             encoding='utf-8', keep_default_na=False,
                             na_values=[])

@@ -12,6 +12,17 @@ from .qiita_client import QiitaClient, ArtifactInfo
 from .plugin import (QiitaCommand, QiitaPlugin, QiitaTypePlugin,
                      QiitaArtifactType)
 
+import logging
+
+logger = logging.getLogger()
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
+
+logger.debug('logging instantiated and configured')
+
 __all__ = ["QiitaClient", "QiitaClientError", "NotFoundError",
            "BadRequestError", "ForbiddenError", "ArtifactInfo", "QiitaCommand",
            "QiitaPlugin", "QiitaTypePlugin", "QiitaArtifactType"]
