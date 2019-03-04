@@ -206,15 +206,29 @@ class QiitaClient(object):
         logger.debug('data = %s' % data)
         logger.debug('authenticate_url = %s' % self._authenticate_url)
         logger.debug('verify = %s' % self._verify)
+        timeout_in_seconds = 90
+        logger.debug('timeout = %d seconds' % timeout_in_seconds)
         logger.debug('Posting...')
-        logger.debug('Timeout set to 90 seconds...')
-        r = requests.post(self._authenticate_url, verify=self._verify,
-                          data=data, timeout=90)
+        try:
+            r = requests.post(self._authenticate_url,
+                             #verify=self._verify,
+                             verify=False,
+                             data=data, timeout=timeout_in_seconds)
+        except StandardError as e:
+            # catches all errors including SSLError, ConnectionError,
+            # Timeout, etc. and logs them
+            logger.debug(str(e))
+
         logger.debug('status code = %d' % r.status_code)
+
         if r.status_code != 200:
-            raise ValueError("Can't authenticate with the Qiita server")
+            msg = "_fetchToken() POST request failed"
+            if e:
+                msg += ": %s" % str(e)
+            raise ValueError(msg)
+
         self._token = r.json()['access_token']
-        logger.debug('token = %s' % self._token)
+        logger.debug('access_token = %s' % self._token)
 
     def _request_oauth2(self, req, *args, **kwargs):
         """Executes a request using OAuth2 authorization
