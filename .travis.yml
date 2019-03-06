@@ -6,6 +6,7 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda3/bin:$PATH
+  - export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
   # Update conda itself
   - conda update --yes conda
 install:
