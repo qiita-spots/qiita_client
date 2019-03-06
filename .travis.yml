@@ -29,7 +29,6 @@ before_script:
 script:
   - source activate qiita_client
   - sleep 5 # give enough time to the webserver to start
-  - find ~ | grep activate$
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_client setup.py
 addons:
