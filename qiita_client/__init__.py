@@ -19,6 +19,13 @@ fmt_str = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 handler.setFormatter(logging.Formatter(fmt_str))
 logger = logging.getLogger(__name__)
 logger.addHandler(handler)
+
+# logging level can be set to one of five levels:
+# logging.DEBUG     (lowest level, includes ALL messages)
+# logging.INFO      (next lowest level)
+# logging.WARNING   (self-explanatory)
+# logging.ERROR     (self-explanatory)
+# logging.CRITICAL  (self-explanatory)
 logger.setLevel(logging.DEBUG)
 
 logger.debug('logging instantiated and configured')
