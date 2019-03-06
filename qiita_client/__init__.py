@@ -37,7 +37,7 @@ if 'QIITA_CLIENT_DEBUG_LEVEL' in environ:
     s = environ['QIITA_CLIENT_DEBUG_LEVEL']
     m = [x for x in debug_levels_list if x[0] == s]
     if m:
-        logger.setLevel(m[1])
+        logger.setLevel(m[0][1])
     else:
         s = "%s is not a valid value for QIITA_CLIENT_DEBUG_LEVEL" % s
         raise ValueError(s)
