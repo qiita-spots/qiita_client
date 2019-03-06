@@ -212,7 +212,7 @@ class QiitaClient(object):
         try:
             r = requests.post(self._authenticate_url,
                               verify=self._verify,
-                              #verify=False,
+                              # verify=False,
                               data=data, timeout=timeout_in_seconds)
 
             logger.debug('status code = %d' % r.status_code)
