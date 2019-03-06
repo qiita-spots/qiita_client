@@ -221,7 +221,7 @@ class QiitaClient(object):
                 raise ValueError("_fetchToken() POST request failed")
 
             logger.debug('RESULT.JSON() = %s' % r.json())
-            self._token = r.json()[b'access_token']
+            self._token = r.json()['access_token']
             logger.debug('access_token = %s' % self._token)
 
         except Exception as e:
