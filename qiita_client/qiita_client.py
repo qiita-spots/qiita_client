@@ -214,7 +214,7 @@ class QiitaClient(object):
                              #verify=self._verify,
                              verify=False,
                              data=data, timeout=timeout_in_seconds)
-        except StandardError as e:
+        except Exception as e:
             # catches all errors including SSLError, ConnectionError,
             # Timeout, etc. and logs them
             logger.debug(str(e))
