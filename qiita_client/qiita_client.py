@@ -15,6 +15,8 @@ from random import randint
 from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
                          ForbiddenError)
 
+from . import verify_cert_flag
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -211,7 +213,8 @@ class QiitaClient(object):
         logger.debug('Posting...')
         try:
             r = requests.post(self._authenticate_url,
-                              verify=self._verify,
+                              verify=verify_cert_flag,
+                              # verify=self._verify,
                               # verify=False,
                               data=data, timeout=timeout_in_seconds)
 

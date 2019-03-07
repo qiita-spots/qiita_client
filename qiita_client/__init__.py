@@ -41,11 +41,17 @@ if 'QIITA_CLIENT_DEBUG_LEVEL' in environ:
     else:
         s = "%s is not a valid value for QIITA_CLIENT_DEBUG_LEVEL" % s
         raise ValueError(s)
+    logger.debug('logging set to %s' % m[0][0])
 else:
     logger.setLevel(logging.CRITICAL)
+    logger.debug('logging set to CRITICAL')
 
+verify_cert_flag = True
 
-logger.debug('logging instantiated and configured')
+if 'QIITA_CLIENT_VERIFY_CERT' in environ:
+    if environ['QIITA_CLIENT_VERIFY_CERT'].lower() == 'false':
+        verify_cert_flag = False
+        logger.debug('QIITA_CLIENT_VERIFY_CERT set to False')
 
 __all__ = ["QiitaClient", "QiitaClientError", "NotFoundError",
            "BadRequestError", "ForbiddenError", "ArtifactInfo", "QiitaCommand",
