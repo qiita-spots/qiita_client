@@ -46,12 +46,6 @@ else:
     logger.setLevel(logging.CRITICAL)
     logger.debug('logging set to CRITICAL')
 
-verify_cert_flag = True
-
-if 'QIITA_CLIENT_VERIFY_CERT' in environ:
-    if environ['QIITA_CLIENT_VERIFY_CERT'].lower() == 'false':
-        verify_cert_flag = False
-        logger.debug('QIITA_CLIENT_VERIFY_CERT set to False')
 
 __all__ = ["QiitaClient", "QiitaClientError", "NotFoundError",
            "BadRequestError", "ForbiddenError", "ArtifactInfo", "QiitaCommand",
