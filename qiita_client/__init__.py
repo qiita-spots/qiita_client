@@ -21,11 +21,11 @@ handler.setFormatter(logging.Formatter(fmt_str))
 logger = logging.getLogger(__name__)
 logger.addHandler(handler)
 
-debug_levels_list = [('DEBUG', logging.DEBUG),
-                     ('INFO', logging.INFO),
-                     ('WARNING', logging.WARNING),
-                     ('ERROR', logging.ERROR),
-                     ('CRITICAL', logging.CRITICAL)]
+debug_levels_list = {'DEBUG': logging.DEBUG,
+                     'INFO': logging.INFO,
+                     'WARNING': logging.WARNING,
+                     'ERROR': logging.ERROR,
+                     'CRITICAL': logging.CRITICAL}
 
 # logging level can be set to one of five levels:
 # logging.DEBUG     (lowest level, includes ALL messages)
@@ -34,14 +34,13 @@ debug_levels_list = [('DEBUG', logging.DEBUG),
 # logging.ERROR     (self-explanatory)
 # logging.CRITICAL  (self-explanatory)
 if 'QIITA_CLIENT_DEBUG_LEVEL' in environ:
-    s = environ['QIITA_CLIENT_DEBUG_LEVEL']
-    m = [x for x in debug_levels_list if x[0] == s]
-    if m:
-        logger.setLevel(m[0][1])
+    level = environ['QIITA_CLIENT_DEBUG_LEVEL']
+    if level in debug_levels_list:
+        logger.setLevel(debug_levels_list[level])
     else:
-        s = "%s is not a valid value for QIITA_CLIENT_DEBUG_LEVEL" % s
-        raise ValueError(s)
-    logger.debug('logging set to %s' % m[0][0])
+        raise ValueError(
+            "%s is not a valid value for QIITA_CLIENT_DEBUG_LEVEL" % level)
+    logger.debug('logging set to %s' % level)
 else:
     logger.setLevel(logging.CRITICAL)
     logger.debug('logging set to CRITICAL')
