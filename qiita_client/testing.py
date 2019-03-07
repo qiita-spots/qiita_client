@@ -58,9 +58,11 @@ class PluginTestCase(TestCase):
         """
         logger.debug('Entered PluginTestCase._wait_for_running_job()')
         for i in range(20):
+            logger.debug('Try get_job_info %d' % i)
             sleep(0.5)
             status = self.qclient.get_job_info(job_id)['status']
             if status != 'running':
+                logger.debug('Job status: %s' % status)
                 break
 
         return status

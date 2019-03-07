@@ -234,6 +234,8 @@ class QiitaPluginTest(PluginTestCase):
                                    data=data)['job']
         tester("https://localhost:21174", job_id, self.outdir)
 
+        logger.debug('Calling self._wait_for_running_job()')
+
         status = self._wait_for_running_job(job_id)
         self.assertEqual(status, 'success')
 
