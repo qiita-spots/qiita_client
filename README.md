@@ -9,7 +9,7 @@ This package includes the Qiita Client utility library, a library to simplify th
 
 How to test this package?
 -------------------------
-In order to test the Qiita Client package, a local installation of Qiita should be running in test mode on the address `https://localhost:21174`, with the default test database created in Qiita's test suite.
+In order to test the Qiita Client package, a local installation of Qiita should be running in test mode on the address `https://127.0.0.1:21174`, with the default test database created in Qiita's test suite.
 Also, if Qiita is running with the default server SSL certificate, you need to export the variable `QIITA_SERVER_CERT` in your environment, so the Qiita Client can perform secure connections against the Qiita server:
 
 ```bash
