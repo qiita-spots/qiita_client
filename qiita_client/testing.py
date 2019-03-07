@@ -25,7 +25,7 @@ class PluginTestCase(TestCase):
         cls.client_secret = ('J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKh'
                              'AmmCWZuabe0O5Mp28s1')
         cls.server_cert = environ.get('QIITA_SERVER_CERT', None)
-        cls.qclient = QiitaClient("https://127.0.0.1:21174", cls.client_id,
+        cls.qclient = QiitaClient("https://localhost:21174", cls.client_id,
                                   cls.client_secret,
                                   server_cert=cls.server_cert)
         cls.qclient.post('/apitest/reload_plugins/')

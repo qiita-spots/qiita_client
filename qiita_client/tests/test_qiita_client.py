@@ -96,7 +96,7 @@ class UtilTests(TestCase):
 class QiitaClientTests(PluginTestCase):
     def setUp(self):
         self.server_cert = environ.get('QIITA_SERVER_CERT', None)
-        self.tester = QiitaClient("https://127.0.0.1:21174", CLIENT_ID,
+        self.tester = QiitaClient("https://localhost:21174", CLIENT_ID,
                                   CLIENT_SECRET, server_cert=self.server_cert)
         self.clean_up_files = []
 
@@ -106,9 +106,9 @@ class QiitaClientTests(PluginTestCase):
                 remove(fp)
 
     def test_init(self):
-        obs = QiitaClient("https://127.0.0.1:21174", CLIENT_ID,
+        obs = QiitaClient("https://localhost:21174", CLIENT_ID,
                           CLIENT_SECRET, server_cert=self.server_cert)
-        self.assertEqual(obs._server_url, "https://127.0.0.1:21174")
+        self.assertEqual(obs._server_url, "https://localhost:21174")
         self.assertEqual(obs._client_id, CLIENT_ID)
         self.assertEqual(obs._client_secret, CLIENT_SECRET)
         self.assertEqual(obs._verify, self.server_cert)
