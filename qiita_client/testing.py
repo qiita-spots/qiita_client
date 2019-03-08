@@ -28,7 +28,8 @@ class PluginTestCase(TestCase):
         cls.qclient = QiitaClient("https://localhost:21174", cls.client_id,
                                   cls.client_secret,
                                   server_cert=cls.server_cert)
-        logger.debug('PluginTestCase.setUpClass() token %s' % cls._token)
+        logger.debug(
+            'PluginTestCase.setUpClass() token %s' % cls.qclient._token)
         cls.qclient.post('/apitest/reload_plugins/')
         # Give enough time for the plugins to register
         sleep(5)
