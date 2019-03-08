@@ -246,6 +246,7 @@ class QiitaClient(object):
             The request response
         """
         logger.debug('Entered QiitaClient._request_oauth2()')
+        logger.debug('kwargs: ', kwargs)
         if 'headers' in kwargs:
             kwargs['headers']['Authorization'] = 'Bearer %s' % self._token
         else:
