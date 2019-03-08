@@ -25,15 +25,12 @@ class PluginTestCase(TestCase):
         cls.client_secret = ('J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKh'
                              'AmmCWZuabe0O5Mp28s1')
         cls.server_cert = environ.get('QIITA_SERVER_CERT', None)
-        logger.debug('Connection Values for PluginTestCase.setUpClass(); '
-                     'client_id: %s, client_secret: %s, server_cert: %s' %
-                     (cls.client_id, cls.client_secret, cls.server_cert))
         cls.qclient = QiitaClient("https://localhost:21174", cls.client_id,
                                   cls.client_secret,
                                   server_cert=cls.server_cert)
-        # Give enough time for the plugins to register
-        sleep(5)
+        logger.debug('PluginTestCase.setUpClass() token %s' % cls._token)
         cls.qclient.post('/apitest/reload_plugins/')
+        # Give enough time for the plugins to register
         sleep(5)
 
     @classmethod
