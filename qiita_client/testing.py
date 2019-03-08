@@ -26,7 +26,7 @@ class PluginTestCase(TestCase):
                              'AmmCWZuabe0O5Mp28s1')
         cls.server_cert = environ.get('QIITA_SERVER_CERT', None)
         logger.debug('Connection Values for PluginTestCase.setUpClass(); '
-                     'client_id: %s, client_secret: %s, server_cert: %s',
+                     'client_id: %s, client_secret: %s, server_cert: %s' %
                      (cls.client_id, cls.client_secret, cls.server_cert))
         cls.qclient = QiitaClient("https://localhost:21174", cls.client_id,
                                   cls.client_secret,
