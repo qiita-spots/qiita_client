@@ -30,7 +30,7 @@ class PluginTestCase(TestCase):
                                   server_cert=cls.server_cert)
         cls.qclient.post('/apitest/reload_plugins/')
         # Give enough time for the plugins to register
-        sleep(5)
+        sleep(20)
 
     @classmethod
     def tearDownClass(cls):
