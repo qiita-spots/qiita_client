@@ -28,17 +28,16 @@ class PluginTestCase(TestCase):
         cls.qclient = QiitaClient("https://localhost:21174", cls.client_id,
                                   cls.client_secret,
                                   server_cert=cls.server_cert)
-        cls.qclient.post('/apitest/reload_plugins/')
+        reply = cls.qclient.post('/apitest/reload_plugins/')
+        logger.debug('PluginTestCase.setUpClass() response: ', reply)
         # Give enough time for the plugins to register
-        sleep(20)
+        sleep(60)
 
     @classmethod
     def tearDownClass(cls):
         logger.debug('Entered PluginTestCase.tearDownClass()')
         # Reset the test database
         cls.qclient.post("/apitest/reset/")
-        # Give enough time for webserver to reset
-        sleep(20)
 
     def _wait_for_running_job(self, job_id):
         """Waits until the given job is not in a running status
