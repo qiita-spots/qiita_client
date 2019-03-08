@@ -37,6 +37,8 @@ class PluginTestCase(TestCase):
         logger.debug('Entered PluginTestCase.tearDownClass()')
         # Reset the test database
         cls.qclient.post("/apitest/reset/")
+        # Give enough time for webserver to reset
+        sleep(20)
 
     def _wait_for_running_job(self, job_id):
         """Waits until the given job is not in a running status
