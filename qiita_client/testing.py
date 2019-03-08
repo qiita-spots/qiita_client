@@ -25,13 +25,15 @@ class PluginTestCase(TestCase):
         cls.client_secret = ('J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKh'
                              'AmmCWZuabe0O5Mp28s1')
         cls.server_cert = environ.get('QIITA_SERVER_CERT', None)
+        logger.debug('Connection Values for PluginTestCase.setUpClass():',
+                     cls.client_id, cls.client_secret, cls.server_cert)
         cls.qclient = QiitaClient("https://localhost:21174", cls.client_id,
                                   cls.client_secret,
                                   server_cert=cls.server_cert)
-        reply = cls.qclient.post('/apitest/reload_plugins/')
-        logger.debug('PluginTestCase.setUpClass() response: ', reply)
         # Give enough time for the plugins to register
-        sleep(60)
+        sleep(5)
+        cls.qclient.post('/apitest/reload_plugins/')
+        sleep(5)
 
     @classmethod
     def tearDownClass(cls):
