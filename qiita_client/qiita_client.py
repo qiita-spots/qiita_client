@@ -154,6 +154,7 @@ class QiitaClient(object):
     """
     def __init__(self, server_url, client_id, client_secret, server_cert=None):
         self._server_url = server_url
+        self._session = requests.Session()
 
         # The attribute self._verify is used to provide the parameter `verify`
         # to the get/post requests. According to their documentation (link:
@@ -192,8 +193,8 @@ class QiitaClient(object):
         data = {'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'grant_type': 'client'}
-        r = requests.post(self._authenticate_url, verify=self._verify,
-                          data=data)
+        r = self._session.post(self._authenticate_url, verify=self._verify,
+                               data=data)
         if r.status_code != 200:
             raise ValueError("Can't authenticate with the Qiita server")
         self._token = r.json()['access_token']
@@ -335,7 +336,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
-        return self._request_retry(requests.get, url, **kwargs)
+        return self._request_retry(self._session.get, url, **kwargs)
 
     def post(self, url, **kwargs):
         """Execute a post request against the Qiita server
@@ -352,7 +353,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
-        return self._request_retry(requests.post, url, **kwargs)
+        return self._request_retry(self._session.post, url, **kwargs)
 
     def patch(self, url, **kwargs):
         """Executes a HTTP patch request against the Qiita server
@@ -371,7 +372,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
-        return self._request_retry(requests.patch, url, **kwargs)
+        return self._request_retry(self._session.patch, url, **kwargs)
 
     # The functions are shortcuts for common functionality that all plugins
     # need to implement.
