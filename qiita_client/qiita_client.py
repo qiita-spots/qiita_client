@@ -354,8 +354,8 @@ class QiitaClient(object):
         """
         return self._request_retry(requests.post, url, **kwargs)
 
-    def patch(self, url, op, path, value=None, from_p=None, **kwargs):
-        """Executes a patch request against the Qiita server
+    def patch(self, url, **kwargs):
+        """Executes a HTTP patch request against the Qiita server
 
         The PATCH request is performed using the JSON PATCH specification [1]_.
 
@@ -363,48 +363,14 @@ class QiitaClient(object):
         ----------
         url : str
             The url to access in the server
-        op : str, {'add', 'remove', 'replace', 'move', 'copy', 'test'}
-            The operation to perform in the PATCH request
-        path : str
-            The target location within the endpoint in which the operation
-            should be performed
-        value : str, optional
-            If `op in ['add', 'replace', 'test']`, the new value for the given
-            path
-        from_p : str, optional
-            If `op in ['move', 'copy']`, the original path
         kwargs : dict
             The request kwargs
 
-        Raises
-        ------
-        ValueError
-            If `op` has one of the values ['add', 'replace', 'test'] and
-            `value` is None
-            If `op` has one of the values ['move', 'copy'] and `from_p` is None
-
-        References
-        ----------
-        .. [1] JSON PATCH spec: https://tools.ietf.org/html/rfc6902
+        Returns
+        -------
+        dict
+            The JSON response from the server
         """
-        if op in ['add', 'replace', 'test'] and value is None:
-            raise ValueError(
-                "Operation '%s' requires the paramater 'value'" % op)
-        if op in ['move', 'copy'] and from_p is None:
-            raise ValueError(
-                "Operation '%s' requires the parameter 'from_p'" % op)
-
-        data = {'op': op, 'path': path}
-        if value is not None:
-            data['value'] = value
-        if from_p is not None:
-            data['from'] = from_p
-
-        # Add the parameter 'data' to kwargs. Note that if it already existed
-        # it is ok to overwrite given that otherwise the call will fail and
-        # we made sure that data is correctly formatted here
-        kwargs['data'] = data
-
         return self._request_retry(requests.patch, url, **kwargs)
 
     # The functions are shortcuts for common functionality that all plugins
