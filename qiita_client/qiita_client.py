@@ -15,6 +15,10 @@ from random import randint
 from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
                          ForbiddenError)
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 JOB_COMPLETED = False
 MAX_RETRIES = 3
 MIN_TIME_SLEEP = 180
@@ -36,12 +40,14 @@ class ArtifactInfo(object):
         A dict of features and their values to store. Format: {feature: values}
     """
     def __init__(self, output_name, artifact_type, files, archive=None):
+        logger.debug('Entered ArtifactInfo.__init__()')
         self.output_name = output_name
         self.artifact_type = artifact_type
         self.files = files
         self.archive = archive if archive is not None else {}
 
     def __eq__(self, other):
+        logger.debug('Entered ArtifactInfo.__eq__()')
         if type(self) != type(other):
             return False
         if self.output_name != other.output_name or \
@@ -52,6 +58,7 @@ class ArtifactInfo(object):
         return True
 
     def __ne__(self, other):
+        logger.debug('Entered ArtifactInfo.__ne__()')
         return not self.__eq__(other)
 
 
@@ -71,6 +78,7 @@ def _heartbeat(qclient, url):
     before retrying another heartbeat. This is useful for updating the Qiita
     server without stopping long running jobs.
     """
+    logger.debug('Entered _heartbeat()')
     retries = MAX_RETRIES
     while not JOB_COMPLETED and retries > 0:
         try:
@@ -117,6 +125,7 @@ def _format_payload(success, error_msg=None, artifacts_info=None):
                                      'filepaths': list of (str, str),
                                      'archive': {str: str}}}
     """
+    logger.debug('Entered _format_payload()')
     if success and artifacts_info:
         artifacts = {
             a_info.output_name: {'artifact_type': a_info.artifact_type,
@@ -155,6 +164,7 @@ class QiitaClient(object):
     def __init__(self, server_url, client_id, client_secret, server_cert=None):
         self._server_url = server_url
         self._session = requests.Session()
+        logger.debug('Entered QiitaClient.__init__()')
 
         # The attribute self._verify is used to provide the parameter `verify`
         # to the get/post requests. According to their documentation (link:
@@ -190,14 +200,32 @@ class QiitaClient(object):
         ValueError
             If the authentication with the Qiita server fails
         """
+        logger.debug('Entered QiitaClient._fetch_token()')
         data = {'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'grant_type': 'client'}
-        r = self._session.post(self._authenticate_url, verify=self._verify,
-                               data=data)
-        if r.status_code != 200:
-            raise ValueError("Can't authenticate with the Qiita server")
-        self._token = r.json()['access_token']
+
+        logger.debug('data = %s' % data)
+        logger.debug('authenticate_url = %s' % self._authenticate_url)
+        logger.debug('verify = %s' % self._verify)
+        try:
+            r = self._session.post(self._authenticate_url,
+                                   verify=self._verify,
+                                   data=data, timeout=80)
+
+            logger.debug('status code = %d' % r.status_code)
+
+            if r.status_code != 200:
+                raise ValueError("_fetchToken() POST request failed")
+
+            logger.debug('RESULT.JSON() = %s' % r.json())
+            self._token = r.json()['access_token']
+            logger.debug('access_token = %s' % self._token)
+
+        except Exception as e:
+            # catches all errors including SSLError, ConnectionError,
+            # Timeout, etc. and logs them
+            logger.debug(str(e))
 
     def _request_oauth2(self, req, *args, **kwargs):
         """Executes a request using OAuth2 authorization
@@ -216,6 +244,7 @@ class QiitaClient(object):
         requests.Response
             The request response
         """
+        logger.debug('Entered QiitaClient._request_oauth2()')
         if 'headers' in kwargs:
             kwargs['headers']['Authorization'] = 'Bearer %s' % self._token
         else:
@@ -292,6 +321,7 @@ class QiitaClient(object):
         implement 3, which is simple and allows to overcome simple
         communication problems.
         """
+        logger.debug('Entered QiitaClient._request_retry()')
         url = self._server_url + url
         retries = MAX_RETRIES
         while retries > 0:
@@ -336,6 +366,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
+        logger.debug('Entered QiitaClient.get()')
         return self._request_retry(self._session.get, url, **kwargs)
 
     def post(self, url, **kwargs):
@@ -353,6 +384,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
+        logger.debug('Entered QiitaClient.post(%s)' % url)
         return self._request_retry(self._session.post, url, **kwargs)
 
     def patch(self, url, **kwargs):
@@ -372,6 +404,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
+        logger.debug('Entered QiitaClient.patch()')
         return self._request_retry(self._session.patch, url, **kwargs)
 
     # The functions are shortcuts for common functionality that all plugins
@@ -385,6 +418,7 @@ class QiitaClient(object):
         job_id : str
             The job id
         """
+        logger.debug('Entered QiitaClient.start_heartbeat()')
         url = "/qiita_db/jobs/%s/heartbeat/" % job_id
         # Execute the first heartbeat, since it is the one that sets the job
         # to a running state - so make sure that other calls to the job work
@@ -408,6 +442,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server with the job information
         """
+        logger.debug('Entered QiitaClient.get_job_info()')
         return self.get("/qiita_db/jobs/%s" % job_id)
 
     def update_job_step(self, job_id, new_step):
@@ -420,6 +455,7 @@ class QiitaClient(object):
         new_step : str
             The new step
         """
+        logger.debug('Entered QiitaClient.update_job_step()')
         json_payload = dumps({'step': new_step})
         self.post("/qiita_db/jobs/%s/step/" % job_id, data=json_payload)
 
@@ -439,6 +475,7 @@ class QiitaClient(object):
         artifacts_info : list of ArtifactInfo
             The list of output artifact information
         """
+        logger.debug('Entered QiitaClient.complete_job()')
         # Stop the heartbeat thread
         global JOB_COMPLETED
         JOB_COMPLETED = True
