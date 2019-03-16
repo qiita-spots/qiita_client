@@ -310,7 +310,7 @@ class QiitaClient(object):
                 raise RuntimeError(
                     "Request '%s %s' did not succeed. Status code: %d. "
                     "Message: %s" % (req.__name__, url, r.status_code, r.text))
-            elif r.status_code == 200:
+            elif 0 <= (r.status_code - 200) < 100:
                 try:
                     return r.json()
                 except ValueError:
