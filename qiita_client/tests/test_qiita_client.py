@@ -158,8 +158,7 @@ class QiitaClientTests(PluginTestCase):
 
     def test_patch(self):
         obs = self.tester.patch(
-            "/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/heartbeat/",
-            data="")
+            "/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/heartbeat/")
         self.assertIsNone(obs)
 
     def test_patch_error(self):
