@@ -15,8 +15,11 @@ from os import makedirs, environ
 from future import standard_library
 from json import dumps
 import urllib
-
 from qiita_client import QiitaClient
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 with standard_library.hooks():
     from configparser import ConfigParser
@@ -71,6 +74,7 @@ class QiitaCommand(object):
     def __init__(self, name, description, function, required_parameters,
                  optional_parameters, outputs, default_parameter_sets=None,
                  analysis_only=False):
+        logger.debug('Entered QiitaCommand.__init__()')
         self.name = name
         self.description = description
 
@@ -97,6 +101,7 @@ class QiitaCommand(object):
         self.analysis_only = analysis_only
 
     def __call__(self, qclient, server_url, job_id, output_dir):
+        logger.debug('Entered QiitaCommand.__call__()')
         return self.function(qclient, server_url, job_id, output_dir)
 
 
@@ -121,6 +126,7 @@ class QiitaArtifactType(object):
     def __init__(self, name, description, can_be_submitted_to_ebi,
                  can_be_submitted_to_vamps, is_user_uploadable,
                  filepath_types):
+        logger.debug('Entered QiitaArtifactType.__init__()')
         self.name = name
         self.description = description
         self.ebi = can_be_submitted_to_ebi
@@ -131,6 +137,7 @@ class QiitaArtifactType(object):
 
 class BaseQiitaPlugin(object):
     def __init__(self, name, version, description, publications=None):
+        logger.debug('Entered BaseQiitaPlugin.__init__()')
         self.name = name
         self.version = version
         self.description = description
@@ -159,6 +166,7 @@ class BaseQiitaPlugin(object):
             path to the Qiita certificate so the plugin can connect over
             HTTPS to it
         """
+        logger.debug('Entered BaseQiitaPlugin.generate_config()')
         sr = SystemRandom()
         chars = ascii_letters + digits
         client_id = ''.join(sr.choice(chars) for i in range(50))
@@ -180,11 +188,13 @@ class BaseQiitaPlugin(object):
         command: QiitaCommand
             The command to be added to the plugin
         """
+        logger.debug('Entered BaseQiitaPlugin._register_command()')
         self.task_dict[command.name] = command
 
     def _register(self, qclient):
         """Registers the plugin information in Qiita"""
         # Get the command information from qiita
+        logger.debug('Entered BaseQiitaPlugin._register()')
         info = qclient.get('/qiita_db/plugins/%s/%s/'
                            % (self.name, self.version))
 
@@ -227,6 +237,7 @@ class BaseQiitaPlugin(object):
         RuntimeError
             If there is a problem gathering the job information
         """
+        logger.debug('Entered BaseQiitaPlugin.__call__()')
         # Set up the Qiita Client
         config = ConfigParser()
         with open(self.conf_fp, 'U') as conf_file:
@@ -301,6 +312,7 @@ class QiitaTypePlugin(BaseQiitaPlugin):
         super(QiitaTypePlugin, self).__init__(name, version, description,
                                               publications=publications)
 
+        logger.debug('Entered QiitaTypePlugin.__init__()')
         self.artifact_types = artifact_types
 
         val_cmd = QiitaCommand(
@@ -322,6 +334,7 @@ class QiitaTypePlugin(BaseQiitaPlugin):
 
     def _register(self, qclient):
         """Registers the plugin information in Qiita"""
+        logger.debug('Entered QiitaTypePlugin._register()')
         for at in self.artifact_types:
             data = {'type_name': at.name,
                     'description': at.description,
@@ -347,6 +360,7 @@ class QiitaPlugin(BaseQiitaPlugin):
         command: QiitaCommand
             The command to be added to the plugin
         """
+        logger.debug('Entered QiitaPlugin.register_command()')
         self._register_command(command)
 
 
