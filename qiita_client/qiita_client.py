@@ -206,13 +206,10 @@ class QiitaClient(object):
         logger.debug('data = %s' % data)
         logger.debug('authenticate_url = %s' % self._authenticate_url)
         logger.debug('verify = %s' % self._verify)
-        timeout_in_seconds = 90
-        logger.debug('timeout = %d seconds' % timeout_in_seconds)
-        logger.debug('Posting...')
         try:
             r = requests.post(self._authenticate_url,
                               verify=self._verify,
-                              data=data, timeout=timeout_in_seconds)
+                              data=data, timeout=80)
 
             logger.debug('status code = %d' % r.status_code)
 
@@ -246,7 +243,6 @@ class QiitaClient(object):
             The request response
         """
         logger.debug('Entered QiitaClient._request_oauth2()')
-        logger.debug('kwargs: ', dict(kwargs))
         if 'headers' in kwargs:
             kwargs['headers']['Authorization'] = 'Bearer %s' % self._token
         else:
@@ -386,7 +382,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
-        logger.debug('Entered QiitaClient.post()')
+        logger.debug('Entered QiitaClient.post(%s)' % url)
         return self._request_retry(requests.post, url, **kwargs)
 
     def patch(self, url, op, path, value=None, from_p=None, **kwargs):
