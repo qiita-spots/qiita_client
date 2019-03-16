@@ -22,7 +22,7 @@ install:
   - export QIITA_CONFIG_FP=${PWD}/config_test.cfg
   - qiita-env make --no-load-ontologies
   - source deactivate
-  - travis_retry conda create --yes -n qiita_client python=PYTHON_VERSION pip nose flake8 coverage
+  - travis_retry conda create --yes -n qiita_client python=$PYTHON_VERSION pip nose flake8 coverage
   - source activate qiita_client
   - pip install -U pip
   - travis_retry pip install .
