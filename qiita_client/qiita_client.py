@@ -209,9 +209,9 @@ class QiitaClient(object):
         logger.debug('authenticate_url = %s' % self._authenticate_url)
         logger.debug('verify = %s' % self._verify)
         try:
-            r = self.session.post(self._authenticate_url,
-                                  verify=self._verify,
-                                  data=data, timeout=80)
+            r = self._session.post(self._authenticate_url,
+                                   verify=self._verify,
+                                   data=data, timeout=80)
 
             logger.debug('status code = %d' % r.status_code)
 
