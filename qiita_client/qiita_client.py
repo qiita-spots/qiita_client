@@ -269,11 +269,13 @@ class QiitaClient(object):
             except ValueError:
                 r_json = None
 
-            if r_json:
-                if r_json.get('error_description') == 'Oauth2 error: token has timed out':
+            if r_json and 'error_description' in r_json:
+                if r_json['error_description'] == \
+                        'Oauth2 error: token has timed out':
                     # The token expired - get a new one and re-try the request
                     self._fetch_token()
-                    kwargs['headers']['Authorization'] = 'Bearer %s' % self._token
+                    kwargs['headers']['Authorization'] = \
+                        'Bearer %s' % self._token
                     r = req(*args, **kwargs)
         return r
 
@@ -340,7 +342,7 @@ class QiitaClient(object):
                 raise RuntimeError(
                     "Request '%s %s' did not succeed. Status code: %d. "
                     "Message: %s" % (req.__name__, url, r.status_code, r.text))
-            elif r.status_code == 200:
+            elif 0 <= (r.status_code - 200) < 100:
                 try:
                     return r.json()
                 except ValueError:
