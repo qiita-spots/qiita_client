@@ -267,12 +267,14 @@ class QiitaClient(object):
             except ValueError:
                 r_json = None
 
-            if r_json and r_json['error_description'] == \
-                    'Oauth2 error: token has timed out':
-                # The token expired - get a new one and re-try the request
-                self._fetch_token()
-                kwargs['headers']['Authorization'] = 'Bearer %s' % self._token
-                r = req(*args, **kwargs)
+            if r_json and 'error_description' in r_json:
+                if r_json['error_description'] == \
+                        'Oauth2 error: token has timed out':
+                    # The token expired - get a new one and re-try the request
+                    self._fetch_token()
+                    kwargs['headers']['Authorization'] = \
+                        'Bearer %s' % self._token
+                    r = req(*args, **kwargs)
         return r
 
     def _request_retry(self, req, url, **kwargs):
