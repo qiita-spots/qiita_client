@@ -157,13 +157,43 @@ class QiitaClientTests(PluginTestCase):
             self.tester.post("/qiita_db/artifacts/1/type/")
 
     def test_patch(self):
-        obs = self.tester.patch(
-            "/qiita_db/artifacts/1")
+        fd, fp = mkstemp()
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+        self.clean_up_files.append(fp)
+
+        obs = self.tester.patch('/qiita_db/artifacts/2/', 'add',
+                                '/html_summary/', value=fp)
         self.assertIsNone(obs)
 
     def test_patch_error(self):
+        with self.assertRaises(BadRequestError):
+            self.tester.patch(
+                '/qiita_db/artifacts/1/filepaths/', 'test',
+                '/html_summary/', value='/path/to/html_summary')
+
+    def test_patch_value_error(self):
+        # Add, replace or test
+        with self.assertRaises(ValueError):
+            self.tester.patch(
+                '/qiita_db/artifacts/1/', 'add', '/html_summary/',
+                from_p='/fastq/')
+
+        # move or copy
+        with self.assertRaises(ValueError):
+            self.tester.patch(
+                '/qiita_db/artifacts/1/', 'move',
+                '/html_summary/', value='/path/to/html_summary')
         with self.assertRaises(RuntimeError):
             self.tester.patch("/qiita_db/artifacts/1/type/")
+
+    def test_http_patch(self):
+        data = self.tester.get('/api/v1/study/1/samples/info')
+        cats = data['categories']
+        payload = {'foo': {c: 'bar' for c in cats}}
+        obs = self.tester.patch('/api/v1/study/1/samples', data=payload)
+        self.assertIsNone(obs)
 
     def test_start_heartbeat(self):
         job_id = "063e553b-327c-4818-ab4a-adfe58e49860"
