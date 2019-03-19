@@ -192,7 +192,7 @@ class QiitaClientTests(PluginTestCase):
         data = self.tester.get('/api/v1/study/1/samples/info')
         cats = data['categories']
         payload = {'foo': {c: 'bar' for c in cats}}
-        obs = self.tester.patch('/api/v1/study/1/samples', data=payload)
+        obs = self.tester.http_patch('/api/v1/study/1/samples', data=payload)
         self.assertIsNone(obs)
 
     def test_start_heartbeat(self):

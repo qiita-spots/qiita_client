@@ -390,7 +390,7 @@ class QiitaClient(object):
         #return self._request_retry(self._session.post, url, **kwargs)
         return self._request_retry(requests.post, url, **kwargs)
 
-    def patch(self, url, **kwargs):
+    def patch(self, url, op, path, value=None, from_p=None, **kwargs):
         """Executes a JSON patch request against the Qiita server
 
         The PATCH request is performed using the JSON PATCH specification [1]_.
