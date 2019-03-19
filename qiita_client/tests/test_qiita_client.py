@@ -186,6 +186,16 @@ class QiitaClientTests(PluginTestCase):
                 '/qiita_db/artifacts/1/', 'move',
                 '/html_summary/', value='/path/to/html_summary')
 
+        with self.assertRaises(TypeError):
+            self.tester.patch("/qiita_db/artifacts/1/type/")
+
+    def test_http_patch(self):
+        data = self.tester.get('/api/v1/study/1/samples/info')
+        cats = data['categories']
+        payload = dumps({'foo': {c: 'bar' for c in cats}})
+        obs = self.tester.http_patch('/api/v1/study/1/samples', data=payload)
+        self.assertIsNone(obs)
+
     def test_start_heartbeat(self):
         job_id = "063e553b-327c-4818-ab4a-adfe58e49860"
         self.tester.start_heartbeat(job_id)

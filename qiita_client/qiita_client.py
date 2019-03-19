@@ -163,7 +163,7 @@ class QiitaClient(object):
     """
     def __init__(self, server_url, client_id, client_secret, server_cert=None):
         self._server_url = server_url
-        logger.debug('Entered QiitaClient.__init__()')
+        self._session = requests.Session()
 
         # The attribute self._verify is used to provide the parameter `verify`
         # to the get/post requests. According to their documentation (link:
@@ -189,6 +189,7 @@ class QiitaClient(object):
         self._authenticate_url = "%s/qiita_db/authenticate/" % self._server_url
 
         # Fetch the access token
+        self._token = None
         self._fetch_token()
 
     def _fetch_token(self):
@@ -203,13 +204,14 @@ class QiitaClient(object):
         data = {'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'grant_type': 'client'}
+
         logger.debug('data = %s' % data)
         logger.debug('authenticate_url = %s' % self._authenticate_url)
         logger.debug('verify = %s' % self._verify)
         try:
-            r = requests.post(self._authenticate_url,
-                              verify=self._verify,
-                              data=data, timeout=80)
+            r = self._session.post(self._authenticate_url,
+                                   verify=self._verify,
+                                   data=data, timeout=80)
 
             logger.debug('status code = %d' % r.status_code)
 
@@ -367,7 +369,7 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.get()')
-        return self._request_retry(requests.get, url, **kwargs)
+        return self._request_retry(self._session.get, url, **kwargs)
 
     def post(self, url, **kwargs):
         """Execute a post request against the Qiita server
@@ -385,10 +387,10 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.post(%s)' % url)
-        return self._request_retry(requests.post, url, **kwargs)
+        return self._request_retry(self._session.post, url, **kwargs)
 
     def patch(self, url, op, path, value=None, from_p=None, **kwargs):
-        """Executes a patch request against the Qiita server
+        """Executes a JSON patch request against the Qiita server
 
         The PATCH request is performed using the JSON PATCH specification [1]_.
 
@@ -419,6 +421,11 @@ class QiitaClient(object):
         References
         ----------
         .. [1] JSON PATCH spec: https://tools.ietf.org/html/rfc6902
+
+        Returns
+        -------
+        dict
+            The JSON response from the server
         """
         logger.debug('Entered QiitaClient.patch()')
         if op in ['add', 'replace', 'test'] and value is None:
@@ -439,10 +446,30 @@ class QiitaClient(object):
         # we made sure that data is correctly formatted here
         kwargs['data'] = data
 
-        return self._request_retry(requests.patch, url, **kwargs)
+        return self._request_retry(self._session.patch, url, **kwargs)
 
     # The functions are shortcuts for common functionality that all plugins
     # need to implement.
+
+    def http_patch(self, url, **kwargs):
+        """Executes a HTTP patch request against the Qiita server
+
+        The PATCH request is performed using the HTTP PATCH specification [1]_.
+
+        Parameters
+        ----------
+        url : str
+            The url to access in the server
+        kwargs : dict
+            The request kwargs
+
+        Returns
+        -------
+        dict
+            The JSON response from the server
+        """
+        logger.debug('Entered QiitaClient.http_patch()')
+        return self._request_retry(self._session.patch, url, **kwargs)
 
     def start_heartbeat(self, job_id):
         """Create and start a thread that would send heartbeats to the server
