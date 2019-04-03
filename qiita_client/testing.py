@@ -25,7 +25,7 @@ class PluginTestCase(TestCase):
         cls.client_secret = ('J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKh'
                              'AmmCWZuabe0O5Mp28s1')
         cls.server_cert = environ.get('QIITA_SERVER_CERT', None)
-        qiita_port = environ.get('QIITA_PORT', 21174)
+        qiita_port = int(environ.get('QIITA_PORT', 21174))
         cls.qclient = QiitaClient(
             "https://localhost:%d" % qiita_port, cls.client_id,
             cls.client_secret, server_cert=cls.server_cert)
