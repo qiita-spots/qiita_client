@@ -67,9 +67,11 @@ def _heartbeat(qclient, url):
 
     Notes
     -----
-    If the Qiita server is not reachable, this function will wait 5 minutes
-    before retrying another heartbeat. This is useful for updating the Qiita
-    server without stopping long running jobs.
+    If the Qiita server is not reachable, this function will wait a random
+    interval of minutes before retrying another heartbeat. This attempts to
+    distribute the load of multiple callers during times of heavier load.
+    Intervals are useful for updating the Qiita server without stopping long
+    running jobs.
     """
     retries = MAX_RETRIES
     while not JOB_COMPLETED and retries > 0:
