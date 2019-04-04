@@ -266,8 +266,8 @@ class QiitaClient(object):
                     raise
                 stime = randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
                 logger.debug(
-                    'retry QiitaClient._request_oauth2() %d, %d, %s' % (
-                        retries, stime, url))
+                    'retry QiitaClient._request_oauth2() %d, %d' % (
+                        retries, stime))
                 time.sleep(stime)
                 retries -= 1
         if r.status_code == 400:
