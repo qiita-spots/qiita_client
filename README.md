@@ -1,7 +1,7 @@
 Qiita Client
 ============
 
-[![Build Status](https://travis-ci.org/qiita-spots/qiita_client.png?branch=master)](https://travis-ci.org/qiita-spots/qiita_client)
+[![Build Status](https://github.com/qiita-spots/qiita_client/actions/workflows/qiita-ci.yml/badge.svg)](https://github.com/qiita-spots/qiita_client/actions/workflows/qiita-ci.yml)
 
 Qiita (canonically pronounced *cheetah*) is an analysis environment for microbiome (and other "comparative -omics") datasets.
 

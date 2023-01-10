@@ -204,6 +204,7 @@ class QiitaClientTests(PluginTestCase):
         job_id = "3c9991ab-6c14-4368-a48c-841e8837a79c"
         obs = self.tester.get_job_info(job_id)
         exp = {'command': 'Pick closed-reference OTUs',
+               'msg': '',
                'status': 'success',
                'parameters': {'input_data': 2,
                               'reference': 1,
