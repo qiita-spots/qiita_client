@@ -133,19 +133,17 @@ class QiitaClientTests(PluginTestCase):
         # Files contain the full path, which it is hard to test, so get only
         # the basename of the files
         obs_files = obs.pop('files')
-        for k in obs_files:
-            obs_files[k] = [basename(v) for v in obs_files[k]]
+        obs_files = {
+            k: [{'filepath': basename(vv['filepath']),
+                 'size': vv['size']} for vv in v]
+            for k, v in obs_files.items()}
         exp_files = {
-            'raw_barcodes': ['1_s_G1_L001_sequences_barcodes.fastq.gz'],
-            'raw_forward_seqs': ['1_s_G1_L001_sequences.fastq.gz']}
-
-        print('===================')
-        print('===================')
-        print(obs_files)
-        print('===================')
-        print(exp_files)
-        print('===================')
-        print('===================')
+            'raw_barcodes': [
+                {'filepath': '1_s_G1_L001_sequences_barcodes.fastq.gz',
+                 'size': 58}],
+            'raw_forward_seqs': [
+                {'filepath': '1_s_G1_L001_sequences.fastq.gz',
+                 'size': 58}]}
 
         self.assertEqual(obs, exp)
         self.assertEqual(obs_files, exp_files)
