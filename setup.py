@@ -12,7 +12,7 @@ from setuptools import setup
 __version__ = "0.1.0-dev"
 
 classes = """
-    Development Status :: 3 - Alpha
+    Development Status :: 5 - Production/Stable
     License :: OSI Approved :: BSD License
     Topic :: Scientific/Engineering :: Bio-Informatics
     Topic :: Software Development :: Libraries :: Application Frameworks
