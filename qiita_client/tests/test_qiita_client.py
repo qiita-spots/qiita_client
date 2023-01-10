@@ -139,6 +139,14 @@ class QiitaClientTests(PluginTestCase):
             'raw_barcodes': ['1_s_G1_L001_sequences_barcodes.fastq.gz'],
             'raw_forward_seqs': ['1_s_G1_L001_sequences.fastq.gz']}
 
+        print('===================')
+        print('===================')
+        print(obs_files)
+        print('===================')
+        print(exp_files)
+        print('===================')
+        print('===================')
+
         self.assertEqual(obs, exp)
         self.assertEqual(obs_files, exp_files)
 
