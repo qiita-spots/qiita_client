@@ -9,8 +9,11 @@
 import time
 import requests
 import threading
+import pandas as pd
 from json import dumps
 from random import randint
+from itertools import zip_longest
+from os.path import basename
 
 from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
                          ForbiddenError)
@@ -23,6 +26,7 @@ JOB_COMPLETED = False
 MAX_RETRIES = 3
 MIN_TIME_SLEEP = 180
 MAX_TIME_SLEEP = 360
+BLANK_FILE_THRESHOLD = 100
 
 
 class ArtifactInfo(object):
@@ -556,3 +560,110 @@ class QiitaClient(object):
                                              artifacts_info=artifacts_info))
         # Create the URL where we have to post the results
         self.post("/qiita_db/jobs/%s/complete/" % job_id, data=json_payload)
+
+    def artifact_and_preparation_files(self, artifact_id,
+                                       ignore_small_files=True):
+        """Gets the artifact and preparation files from a given artifact_id
+
+        Parameters
+        ----------
+        artifact_id : int
+            The artifact id
+        ignore_small_files : bool
+            Whether to ignore small files or retrieve all of them (only applies
+            to per_sample_FASTQ artifacts)
+
+        Returns
+        -------
+        dict
+            files available in the artifact
+        pandas.DataFrame
+            the prep information file for that artifact
+
+        Raises
+        ------
+        RuntimeError
+            - If the artifact belongs to an analysis
+
+        """
+        artifact_info = self.get("/qiita_db/artifacts/%s/" % artifact_id)
+
+        if artifact_info['analysis'] is not None:
+            raise RuntimeError(
+                f'Artifact {artifact_id} is an analysis artifact, this method '
+                'is meant to work with artifacts linked to a preparation.')
+
+        prep_info = self.get('/qiita_db/prep_template/%s/'
+                             % artifact_info['prep_information'][0])
+        prep_info = pd.read_csv(prep_info['prep-file'], sep='\t', dtype=str)
+        if artifact_info['type'] == 'per_sample_FASTQ':
+            files, prep_info = self._process_files_per_sample_fastq(
+                artifact_info['files'], prep_info, ignore_small_files)
+        else:
+            files = {k: [vv['filepath'] for vv in v]
+                     for k, v in artifact_info['files'].items()}
+
+        return files, prep_info
+
+    def _process_files_per_sample_fastq(self, files, prep_info,
+                                        ignore_small_files):
+        "helper function to process per_sample_FASTQ artifacts and their preps"
+
+        fwds = sorted(files['raw_forward_seqs'], key=lambda x: x['filepath'])
+        revs = []
+        if 'raw_reverse_seqs' in files:
+            revs = sorted(
+                files['raw_reverse_seqs'], key=lambda x: x['filepath'])
+            if len(fwds) != len(revs):
+                raise ValueError(f'The fwd ({len(fwds)}) and rev ({len(revs)})'
+                                 ' files should be of the same length')
+
+        run_prefixes = prep_info['run_prefix'].to_dict()
+
+        # make parirings
+        sample_names = dict()
+        used_prefixes = []
+        for i, (fwd, rev) in enumerate(zip_longest(fwds, revs)):
+            fwd_fn = basename(fwd['filepath'])
+            file_smaller_than_min = fwd['size'] < BLANK_FILE_THRESHOLD
+
+            # iterate over run prefixes and make sure only one matches
+            run_prefix = None
+            sample_name = None
+            for sn, rp in run_prefixes.items():
+                if fwd_fn.startswith(rp) and run_prefix is None:
+                    run_prefix = rp
+                    sample_name = sn
+                elif fwd_fn.startswith(rp) and run_prefix is not None:
+                    raise ValueError(
+                        f'Multiple run prefixes match this fwd read: {fwd_fn}')
+
+            if run_prefix is None:
+                raise ValueError(
+                    f'No run prefix matching this fwd read: {fwd_fn}')
+            if run_prefix in used_prefixes:
+                raise ValueError(
+                    f'Run prefix matches multiple fwd reads: {run_prefix}')
+            used_prefixes.append(run_prefix)
+
+            if rev is not None:
+                # if we have reverse reads, make sure the matching pair also
+                # matches the run prefix:
+                rev_fn = basename(rev['filepath'])
+                if not file_smaller_than_min:
+                    file_smaller_than_min = rev['size'] < BLANK_FILE_THRESHOLD
+                if not rev_fn.startswith(run_prefix):
+                    raise ValueError(
+                        'Reverse read does not match run prefix. run_prefix: '
+                        f'{run_prefix}; files: {fwd_fn} / {rev_fn}')
+
+            used_prefixes.append(run_prefix)
+
+            if ignore_small_files and file_smaller_than_min:
+                continue
+
+            sample_names[sample_name] = (fwd, rev)
+
+        prep_info = prep_info.filter(items=sample_names.keys(), axis=0)
+
+        return sample_names, prep_info

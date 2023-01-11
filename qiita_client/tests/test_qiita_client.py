@@ -11,6 +11,7 @@ from os import environ, remove, close
 from os.path import basename, exists
 from tempfile import mkstemp
 from json import dumps
+import pandas as pd
 
 from qiita_client.qiita_client import (QiitaClient, _format_payload,
                                        ArtifactInfo)
@@ -133,11 +134,17 @@ class QiitaClientTests(PluginTestCase):
         # Files contain the full path, which it is hard to test, so get only
         # the basename of the files
         obs_files = obs.pop('files')
-        for k in obs_files:
-            obs_files[k] = [basename(v) for v in obs_files[k]]
+        obs_files = {
+            k: [{'filepath': basename(vv['filepath']),
+                 'size': vv['size']} for vv in v]
+            for k, v in obs_files.items()}
         exp_files = {
-            'raw_barcodes': ['1_s_G1_L001_sequences_barcodes.fastq.gz'],
-            'raw_forward_seqs': ['1_s_G1_L001_sequences.fastq.gz']}
+            'raw_barcodes': [
+                {'filepath': '1_s_G1_L001_sequences_barcodes.fastq.gz',
+                 'size': 58}],
+            'raw_forward_seqs': [
+                {'filepath': '1_s_G1_L001_sequences.fastq.gz',
+                 'size': 58}]}
 
         self.assertEqual(obs, exp)
         self.assertEqual(obs_files, exp_files)
@@ -204,6 +211,7 @@ class QiitaClientTests(PluginTestCase):
         job_id = "3c9991ab-6c14-4368-a48c-841e8837a79c"
         obs = self.tester.get_job_info(job_id)
         exp = {'command': 'Pick closed-reference OTUs',
+               'msg': '',
                'status': 'success',
                'parameters': {'input_data': 2,
                               'reference': 1,
@@ -249,6 +257,86 @@ class QiitaClientTests(PluginTestCase):
 
         obs = self.tester.complete_job(job_id, True, artifacts_info=ainfo)
         self.assertIsNone(obs)
+
+    def test_artifact_and_preparation_files(self):
+
+        # check success
+        fobs, prep_info = self.tester.artifact_and_preparation_files(1)
+        # just leaving filenames as the folders are dynamic and a pain to test
+        fobs = {k: [basename(vv) for vv in v] for k, v in fobs.items()}
+        fexp = {'raw_forward_seqs': ['1_s_G1_L001_sequences.fastq.gz'],
+                'raw_barcodes': ['1_s_G1_L001_sequences_barcodes.fastq.gz']}
+        self.assertEqual(fobs, fexp)
+        self.assertEqual(prep_info.shape, (27, 22))
+
+        # check failure
+        with self.assertRaisesRegex(RuntimeError, 'Artifact 8 is an analysis '
+                                    'artifact, this method is meant to work '
+                                    'with artifacts linked to a preparation.'):
+            self.tester.artifact_and_preparation_files(8)
+
+        # test _process_files_per_sample_fastq
+        # both fwd/rev
+        files = {
+            'raw_forward_seqs': [
+                {'filepath': '/X/file_3_R1.fastq.gz', 'size': 101},
+                {'filepath': '/X/file_1_R1.fastq.gz', 'size': 99},
+                {'filepath': '/X/file_2_R1.fastq.gz', 'size': 101}],
+            'raw_reverse_seqs': [
+                {'filepath': '/X/file_2_R2.fastq.gz', 'size': 101},
+                {'filepath': '/X/file_1_R2.fastq.gz', 'size': 101},
+                {'filepath': '/X/file_3_R2.fastq.gz', 'size': 101}]}
+        prep_info = pd.DataFrame.from_dict({
+            'run_prefix': {"sample.1": 'file_1',
+                           "sample.2": 'file_2',
+                           "sample.3": 'file_3'}}, dtype=str)
+        prep_info.index.name = 'sample_name'
+        fobs, piobs = self.tester._process_files_per_sample_fastq(
+            files, prep_info, False)
+        fexp = {
+            'sample.1': ({'filepath': '/X/file_1_R1.fastq.gz', 'size': 99},
+                         {'filepath': '/X/file_1_R2.fastq.gz', 'size': 101}),
+            'sample.2': ({'filepath': '/X/file_2_R1.fastq.gz', 'size': 101},
+                         {'filepath': '/X/file_2_R2.fastq.gz', 'size': 101}),
+            'sample.3': ({'filepath': '/X/file_3_R1.fastq.gz', 'size': 101},
+                         {'filepath': '/X/file_3_R2.fastq.gz', 'size': 101})}
+        self.assertEqual(fobs, fexp)
+        self.assertEqual(piobs.shape, (3, 1))
+
+        fobs, piobs = self.tester._process_files_per_sample_fastq(
+            files, prep_info, True)
+        del fexp['sample.1']
+        self.assertEqual(fobs, fexp)
+        self.assertEqual(piobs.shape, (2, 1))
+
+        # just fwd
+        files = {
+            'raw_forward_seqs': [
+                {'filepath': '/X/file_3_R1.fastq.gz', 'size': 101},
+                {'filepath': '/X/file_1_R1.fastq.gz', 'size': 99},
+                {'filepath': '/X/file_2_R1.fastq.gz', 'size': 101}]}
+        prep_info = pd.DataFrame.from_dict({
+            'run_prefix': {"sample.1": 'file_1',
+                           "sample.2": 'file_2',
+                           "sample.3": 'file_3'}}, dtype=str)
+        prep_info.index.name = 'sample_name'
+        fobs, piobs = self.tester._process_files_per_sample_fastq(
+            files, prep_info, False)
+        fexp = {
+            'sample.1': ({'filepath': '/X/file_1_R1.fastq.gz', 'size': 99},
+                         None),
+            'sample.2': ({'filepath': '/X/file_2_R1.fastq.gz', 'size': 101},
+                         None),
+            'sample.3': ({'filepath': '/X/file_3_R1.fastq.gz', 'size': 101},
+                         None)}
+        self.assertEqual(fobs, fexp)
+        self.assertEqual(piobs.shape, (3, 1))
+
+        fobs, piobs = self.tester._process_files_per_sample_fastq(
+            files, prep_info, True)
+        del fexp['sample.1']
+        self.assertEqual(fobs, fexp)
+        self.assertEqual(piobs.shape, (2, 1))
 
 
 if __name__ == '__main__':
