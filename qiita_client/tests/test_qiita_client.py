@@ -309,6 +309,35 @@ class QiitaClientTests(PluginTestCase):
         self.assertEqual(fobs, fexp)
         self.assertEqual(piobs.shape, (2, 1))
 
+        # just fwd
+        files = {
+            'raw_forward_seqs': [
+                {'filepath': '/X/file_3_R1.fastq.gz', 'size': 101},
+                {'filepath': '/X/file_1_R1.fastq.gz', 'size': 99},
+                {'filepath': '/X/file_2_R1.fastq.gz', 'size': 101}]}
+        prep_info = pd.DataFrame.from_dict({
+            'run_prefix': {"sample.1": 'file_1',
+                           "sample.2": 'file_2',
+                           "sample.3": 'file_3'}}, dtype=str)
+        prep_info.index.name = 'sample_name'
+        fobs, piobs = self.tester._process_files_per_sample_fastq(
+            files, prep_info, False)
+        fexp = {
+            'sample.1': ({'filepath': '/X/file_1_R1.fastq.gz', 'size': 99},
+                         None),
+            'sample.2': ({'filepath': '/X/file_2_R1.fastq.gz', 'size': 101},
+                         None),
+            'sample.3': ({'filepath': '/X/file_3_R1.fastq.gz', 'size': 101},
+                         None)}
+        self.assertEqual(fobs, fexp)
+        self.assertEqual(piobs.shape, (3, 1))
+
+        fobs, piobs = self.tester._process_files_per_sample_fastq(
+            files, prep_info, True)
+        del fexp['sample.1']
+        self.assertEqual(fobs, fexp)
+        self.assertEqual(piobs.shape, (2, 1))
+
 
 if __name__ == '__main__':
     main()

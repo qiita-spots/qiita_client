@@ -26,7 +26,7 @@ JOB_COMPLETED = False
 MAX_RETRIES = 3
 MIN_TIME_SLEEP = 180
 MAX_TIME_SLEEP = 360
-MIN_FILEPATH_SIZE = 100
+BLANK_FILE_THRESHOLD = 100
 
 
 class ArtifactInfo(object):
@@ -575,6 +575,10 @@ class QiitaClient(object):
 
         Returns
         -------
+        dict
+            files available in the artifact
+        pandas.DataFrame
+            the prep information file for that artifact
 
         Raises
         ------
@@ -621,7 +625,7 @@ class QiitaClient(object):
         used_prefixes = []
         for i, (fwd, rev) in enumerate(zip_longest(fwds, revs)):
             fwd_fn = basename(fwd['filepath'])
-            file_smaller_than_min = fwd['size'] < MIN_FILEPATH_SIZE
+            file_smaller_than_min = fwd['size'] < BLANK_FILE_THRESHOLD
 
             # iterate over run prefixes and make sure only one matches
             run_prefix = None
@@ -647,7 +651,7 @@ class QiitaClient(object):
                 # matches the run prefix:
                 rev_fn = basename(rev['filepath'])
                 if not file_smaller_than_min:
-                    file_smaller_than_min = rev['size'] < MIN_FILEPATH_SIZE
+                    file_smaller_than_min = rev['size'] < BLANK_FILE_THRESHOLD
                 if not rev_fn.startswith(run_prefix):
                     raise ValueError(
                         'Reverse read does not match run prefix. run_prefix: '
