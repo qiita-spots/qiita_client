@@ -12,7 +12,12 @@ import threading
 import pandas as pd
 from json import dumps
 from random import randint
-from itertools import zip_longest
+
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
+
 from os.path import basename
 
 from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
