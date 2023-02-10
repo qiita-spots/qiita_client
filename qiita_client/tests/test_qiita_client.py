@@ -101,6 +101,10 @@ class QiitaClientTests(PluginTestCase):
                                   CLIENT_SECRET, server_cert=self.server_cert)
         self.clean_up_files = []
 
+        # making assertRaisesRegex compatible with Python 2.7 and 3.9
+        if not hasattr(self, 'assertRaisesRegex'):
+            setattr(self, 'assertRaisesRegex', self.assertRaisesRegexp)
+
     def tearDown(self):
         for fp in self.clean_up_files:
             if exists(fp):
