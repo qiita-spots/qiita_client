@@ -616,8 +616,8 @@ class QiitaClient(object):
             revs = sorted(
                 files['raw_reverse_seqs'], key=lambda x: x['filepath'])
             if len(fwds) != len(revs):
-                raise ValueError('The fwd (' + str(len(fwds)) ') and rev (' +
-                                 str(len(revs)) + ') files should be of the '
+                raise ValueError('The fwd (' + str(len(fwds)) + ') and rev ('
+                                 + str(len(revs)) + ') files should be of the '
                                  'same length')
 
         run_prefixes = prep_info['run_prefix'].to_dict()
@@ -645,7 +645,7 @@ class QiitaClient(object):
                     'No run prefix matching this fwd read: %s' % fwd_fn)
             if run_prefix in used_prefixes:
                 raise ValueError(
-                    f'Run prefix matches multiple fwd reads: %s' % run_prefix)
+                    'Run prefix matches multiple fwd reads: %s' % run_prefix)
             used_prefixes.append(run_prefix)
 
             if rev is not None:
