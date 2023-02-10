@@ -590,7 +590,7 @@ class QiitaClient(object):
 
         if artifact_info['analysis'] is not None:
             raise RuntimeError(
-                'Artifact' + str(artifact_id) + 'is an analysis artifact, '
+                'Artifact ' + str(artifact_id) + ' is an analysis artifact, '
                 'this method is meant to work with artifacts linked to '
                 'a preparation.')
 
