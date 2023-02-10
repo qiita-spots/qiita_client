@@ -12,7 +12,12 @@ import threading
 import pandas as pd
 from json import dumps
 from random import randint
-from itertools import zip_longest
+
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
+
 from os.path import basename
 
 from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
@@ -590,8 +595,9 @@ class QiitaClient(object):
 
         if artifact_info['analysis'] is not None:
             raise RuntimeError(
-                f'Artifact {artifact_id} is an analysis artifact, this method '
-                'is meant to work with artifacts linked to a preparation.')
+                'Artifact ' + str(artifact_id) + ' is an analysis artifact, '
+                'this method is meant to work with artifacts linked to '
+                'a preparation.')
 
         prep_info = self.get('/qiita_db/prep_template/%s/'
                              % artifact_info['prep_information'][0])
@@ -615,8 +621,9 @@ class QiitaClient(object):
             revs = sorted(
                 files['raw_reverse_seqs'], key=lambda x: x['filepath'])
             if len(fwds) != len(revs):
-                raise ValueError(f'The fwd ({len(fwds)}) and rev ({len(revs)})'
-                                 ' files should be of the same length')
+                raise ValueError('The fwd (' + str(len(fwds)) + ') and rev ('
+                                 + str(len(revs)) + ') files should be of the '
+                                 'same length')
 
         run_prefixes = prep_info['run_prefix'].to_dict()
 
@@ -635,15 +642,15 @@ class QiitaClient(object):
                     run_prefix = rp
                     sample_name = sn
                 elif fwd_fn.startswith(rp) and run_prefix is not None:
-                    raise ValueError(
-                        f'Multiple run prefixes match this fwd read: {fwd_fn}')
+                    raise ValueError('Multiple run prefixes match this fwd '
+                                     'read: %s' % fwd_fn)
 
             if run_prefix is None:
                 raise ValueError(
-                    f'No run prefix matching this fwd read: {fwd_fn}')
+                    'No run prefix matching this fwd read: %s' % fwd_fn)
             if run_prefix in used_prefixes:
                 raise ValueError(
-                    f'Run prefix matches multiple fwd reads: {run_prefix}')
+                    'Run prefix matches multiple fwd reads: %s' % run_prefix)
             used_prefixes.append(run_prefix)
 
             if rev is not None:
@@ -655,7 +662,7 @@ class QiitaClient(object):
                 if not rev_fn.startswith(run_prefix):
                     raise ValueError(
                         'Reverse read does not match run prefix. run_prefix: '
-                        f'{run_prefix}; files: {fwd_fn} / {rev_fn}')
+                        '%s; files: %s / %s') % (run_prefix, fwd_fn, rev_fn)
 
             used_prefixes.append(run_prefix)
 
