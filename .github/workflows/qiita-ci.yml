@@ -80,6 +80,7 @@ jobs:
         run: |
           conda create --yes -n qiita_client python=${{ matrix.python-version }} pip nose flake8 coverage
           conda activate qiita_client
+          python -m pip install --upgrade pip
 
           pip --quiet install .
 
