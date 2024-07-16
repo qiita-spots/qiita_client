@@ -527,7 +527,7 @@ class QiitaClient(object):
         logger.debug('Entered QiitaClient.get_job_info()')
         return self.get("/qiita_db/jobs/%s" % job_id)
 
-    def update_job_step(self, job_id, new_step):
+    def update_job_step(self, job_id, new_step, ignore_error=False):
         """Updates the current step of the job in the server
 
         Parameters
@@ -536,10 +536,16 @@ class QiitaClient(object):
             The job id
         new_step : str
             The new step
+        ignore_error : bool
+            Problems communicating w/Qiita will not raise an Error.
         """
         logger.debug('Entered QiitaClient.update_job_step()')
         json_payload = dumps({'step': new_step})
-        self.post("/qiita_db/jobs/%s/step/" % job_id, data=json_payload)
+        try:
+            self.post("/qiita_db/jobs/%s/step/" % job_id, data=json_payload)
+        except RuntimeError as e:
+            if ignore_error is True:
+                raise e
 
     def complete_job(self, job_id, success, error_msg=None,
                      artifacts_info=None):

@@ -19,6 +19,7 @@ from qiita_client.testing import PluginTestCase
 from qiita_client.exceptions import BadRequestError
 
 CLIENT_ID = '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4'
+BAD_CLIENT_ID = 'NOT_A_CLIENT_ID'
 CLIENT_SECRET = ('J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKh'
                  'AmmCWZuabe0O5Mp28s1')
 
@@ -99,6 +100,9 @@ class QiitaClientTests(PluginTestCase):
         self.server_cert = environ.get('QIITA_SERVER_CERT', None)
         self.tester = QiitaClient("https://localhost:21174", CLIENT_ID,
                                   CLIENT_SECRET, server_cert=self.server_cert)
+        self.bad_tester = QiitaClient("https://localhost:21174", BAD_CLIENT_ID,
+                                      CLIENT_SECRET,
+                                      server_cert=self.server_cert)
         self.clean_up_files = []
 
         # making assertRaisesRegex compatible with Python 2.7 and 3.9
@@ -231,6 +235,28 @@ class QiitaClientTests(PluginTestCase):
         new_step = "some new step"
         obs = self.tester.update_job_step(job_id, new_step)
         self.assertIsNone(obs)
+
+    def test_update_job_step_ignore_failure(self):
+        job_id = "bcc7ebcd-39c1-43e4-af2d-822e3589f14d"
+        new_step = "some new step"
+
+        # confirm that update_job_step behaves as before when ignore_error
+        # parameter absent or set to False.
+
+        with self.assertRaises(RuntimeError):
+            self.bad_tester.update_job_step(job_id, new_step)
+
+        with self.assertRaises(RuntimeError):
+            self.bad_tester.update_job_step(job_id, new_step,
+                                            ignore_error=False)
+
+        # confirm that when ignore_error is set to True, an Error is NOT
+        # raised.
+        try:
+            self.bad_tester.update_job_step(job_id, new_step,
+                                            ignore_error=True)
+        except RuntimeError:
+            self.fail("update_job_step raised RuntimeError unexpectedly")
 
     def test_complete_job(self):
         # Create a new job
