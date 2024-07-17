@@ -28,7 +28,7 @@ class PluginTestCase(TestCase):
         qiita_port = int(environ.get('QIITA_PORT', 21174))
         cls.qclient = QiitaClient(
             "https://localhost:%d" % qiita_port, cls.client_id,
-            cls.client_secret, server_cert=cls.server_cert)
+            cls.client_secret)
         logger.debug(
             'PluginTestCase.setUpClass() token %s' % cls.qclient._token)
         cls.qclient.post('/apitest/reload_plugins/')
