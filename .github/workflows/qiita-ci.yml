@@ -82,22 +82,7 @@ jobs:
           conda create --yes -n qiita_client python=${{ matrix.python-version }} pip nose flake8 coverage
           conda activate qiita_client
           python -m pip install --upgrade pip
-
-          export QIITA_SERVER_CERT=`pwd`/qiita-dev/qiita_core/support_files/ci_server.crt
-          export QIITA_CONFIG_FP=`pwd`/qiita-dev/qiita_core/support_files/config_test_local.cfg
-
-          pip --quiet install https://github.com/qiita-spots/qtp-job-output-folder/archive/refs/heads/main.zip
-
-          # pip --quiet install .
           pip install .
-          pip --quiet install coveralls
-
-          export QP_KLP_CONFIG_FP=`pwd`/configuration.json
-
-          configure_qtp_job_output_folder --env-script "source /home/runner/.profile; conda activate klp" --server-cert $QIITA_SERVER_CERT
-
-          echo "Available Qiita plugins"
-          ls ~/.qiita_plugins/
 
       - name: Starting Main Services
         shell: bash -l {0}
