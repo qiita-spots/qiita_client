@@ -245,7 +245,12 @@ class BaseQiitaPlugin(object):
 
         qclient = QiitaClient(server_url, config.get('oauth2', 'CLIENT_ID'),
                               config.get('oauth2', 'CLIENT_SECRET'),
-                              server_cert=config.get('oauth2', 'SERVER_CERT'))
+                              # for this group of tests, confirm optional
+                              # ca_cert parameter works as intended. Setting
+                              # this value will prevent underlying libraries
+                              # from validating the server's cert using
+                              # certifi's pem cache.
+                              ca_cert=environ['QIITA_ROOT_CA'])
 
         if job_id == 'register':
             self._register(qclient)

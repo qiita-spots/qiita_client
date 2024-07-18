@@ -166,8 +166,8 @@ class QiitaClient(object):
         The client id to connect to the Qiita server
     client_secret : str
         The client secret id to connect to the Qiita server
-    server_cert : str, optional
-        The server certificate, in case that it is not verified
+    ca_cert : str, optional
+        CA cert used to sign and verify cert@server_url
 
 
     Methods
@@ -175,7 +175,7 @@ class QiitaClient(object):
     get
     post
     """
-    def __init__(self, server_url, client_id, client_secret, server_cert=None):
+    def __init__(self, server_url, client_id, client_secret, ca_cert=None):
         self._server_url = server_url
         self._session = requests.Session()
 
@@ -186,16 +186,21 @@ class QiitaClient(object):
         # if certificate verification should be performed or not, or a
         # string with the path to the certificate file that needs to be used
         # to verify the identity of the server.
-        # We are setting this attribute at __init__ time so we can avoid
-        # executing this if statement for each request issued.
-        if not server_cert:
+        # We are setting this attribute at __init__ time to avoid executing
+        # this if statement for each request issued.
+
+        # As self-signed server certs are no longer allowed in one or more of
+        # our dependencies, ca_cert (if provided) must now reference a file
+        # that can be used to verify the certificate used by the server
+        # referenced by server_url, rather than the server's own certificate.
+        if not ca_cert:
             # The server certificate is not provided, use standard certificate
             # verification methods
             self._verify = True
         else:
             # The server certificate is provided, use it to verify the identity
             # of the server
-            self._verify = server_cert
+            self._verify = ca_cert
 
         # Set up oauth2
         self._client_id = client_id
@@ -543,8 +548,8 @@ class QiitaClient(object):
         json_payload = dumps({'step': new_step})
         try:
             self.post("/qiita_db/jobs/%s/step/" % job_id, data=json_payload)
-        except RuntimeError as e:
-            if ignore_error is True:
+        except BaseException as e:
+            if ignore_error is False:
                 raise e
 
     def complete_job(self, job_id, success, error_msg=None,
