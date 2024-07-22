@@ -379,6 +379,5 @@ PLUGIN_TYPE = %s
 PUBLICATIONS = %s
 
 [oauth2]
-ROOTCA_CERT = %s
 CLIENT_ID = %s
 CLIENT_SECRET = %s"""
