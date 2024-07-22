@@ -67,7 +67,6 @@ jobs:
           conda config --add channels conda-forge
           conda create -q --yes -n qiita python=3.9 libgfortran numpy nginx cython redis
           conda activate qiita
-          python -m pip install --upgrade pip
 
       - name: Qiita install
         shell: bash -l {0}
@@ -81,7 +80,6 @@ jobs:
         run: |
           conda create --yes -n qiita_client python=${{ matrix.python-version }} pip nose flake8 coverage
           conda activate qiita_client
-          python -m pip install --upgrade pip
           pip install .
 
       - name: Starting Main Services
