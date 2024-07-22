@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os import remove, close
+from os import remove, close, environ
 from os.path import basename, exists
 from tempfile import mkstemp
 from json import dumps
@@ -97,7 +97,6 @@ class UtilTests(TestCase):
 
 class QiitaClientTests(PluginTestCase):
     def setUp(self):
-        # self.server_cert = environ.get('QIITA_SERVER_CERT', None)
         self.tester = QiitaClient("https://localhost:21174",
                                   CLIENT_ID,
                                   CLIENT_SECRET)
@@ -116,11 +115,14 @@ class QiitaClientTests(PluginTestCase):
                 remove(fp)
 
     def test_init(self):
-        obs = QiitaClient("https://localhost:21174", CLIENT_ID, CLIENT_SECRET)
+        obs = QiitaClient("https://localhost:21174",
+                          CLIENT_ID,
+                          CLIENT_SECRET,
+                          ca_cert=environ['QIITA_ROOT_CA'])
         self.assertEqual(obs._server_url, "https://localhost:21174")
         self.assertEqual(obs._client_id, CLIENT_ID)
         self.assertEqual(obs._client_secret, CLIENT_SECRET)
-        self.assertEqual(obs._verify, True)
+        self.assertEqual(obs._verify, environ['QIITA_ROOT_CA'])
 
     def test_get(self):
         obs = self.tester.get("/qiita_db/artifacts/1/")

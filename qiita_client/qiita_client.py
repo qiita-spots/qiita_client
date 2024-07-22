@@ -57,7 +57,7 @@ class ArtifactInfo(object):
 
     def __eq__(self, other):
         logger.debug('Entered ArtifactInfo.__eq__()')
-        if type(self) != type(other):   # noqa
+        if type(self) is not type(other):
             return False
         if self.output_name != other.output_name or \
                 self.artifact_type != other.artifact_type or \

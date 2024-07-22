@@ -250,7 +250,7 @@ class BaseQiitaPlugin(object):
                               # this value will prevent underlying libraries
                               # from validating the server's cert using
                               # certifi's pem cache.
-                              ca_cert=environ['QIITA_ROOT_CA'])
+                              ca_cert=environ['QIITA_ROOTCA_CERT'])
 
         if job_id == 'register':
             self._register(qclient)
