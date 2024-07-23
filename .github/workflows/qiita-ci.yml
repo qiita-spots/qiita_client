@@ -7,7 +7,6 @@ on:
 jobs:
   # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
   main:
-    # 7/16/24: confirm current ubuntu-latest is still 22.04.
     runs-on: ubuntu-latest
 
     strategy:
@@ -80,7 +79,7 @@ jobs:
         run: |
           conda create --yes -n qiita_client python=${{ matrix.python-version }} pip nose flake8 coverage
           conda activate qiita_client
-          pip install .
+          pip --quiet install .
 
       - name: Starting Main Services
         shell: bash -l {0}
@@ -120,7 +119,6 @@ jobs:
           conda activate qiita_client
           export QIITA_ROOTCA_CERT=`pwd`/qiita-dev/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita-dev/qiita_core/support_files/config_test_local.cfg
-          export PYTHONWARNINGS="ignore:Certificate for localhost has no \`subjectAltName\`"
       - uses: codecov/codecov-action@v3
         with:
          token: ${{ secrets.CODECOV_TOKEN }}

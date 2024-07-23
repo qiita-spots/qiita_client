@@ -532,7 +532,7 @@ class QiitaClient(object):
         logger.debug('Entered QiitaClient.get_job_info()')
         return self.get("/qiita_db/jobs/%s" % job_id)
 
-    def update_job_step(self, job_id, new_step, ignore_error=False):
+    def update_job_step(self, job_id, new_step, ignore_error=True):
         """Updates the current step of the job in the server
 
         Parameters
