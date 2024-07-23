@@ -146,8 +146,7 @@ class QiitaTypePluginTest(PluginTestCase):
                      'PLUGIN_TYPE = artifact definition\n',
                      'PUBLICATIONS = \n',
                      '\n',
-                     '[oauth2]\n',
-                     'SERVER_CERT = \n']
+                     '[oauth2]\n']
         # We will test the last 2 lines independently since they're variable
         # in each test run
         self.assertEqual(conf[:-2], exp_lines)
@@ -168,8 +167,7 @@ class QiitaTypePluginTest(PluginTestCase):
                                  validate_func, html_generator_func, atypes)
 
         # Generate the config file for the new plugin
-        tester.generate_config('ls', 'echo',
-                               server_cert=self.server_cert)
+        tester.generate_config('ls', 'echo')
         # Ask Qiita to reload the plugins
         self.qclient.post('/apitest/reload_plugins/')
 
@@ -213,8 +211,7 @@ class QiitaPluginTest(PluginTestCase):
                              {'out1': 'Demultiplexed'})
         tester.register_command(a_cmd)
 
-        tester.generate_config('ls', 'echo',
-                               server_cert=self.server_cert)
+        tester.generate_config('ls', 'echo')
         self.qclient.post('/apitest/reload_plugins/')
         tester("https://localhost:21174", 'register', 'ignored')
 

@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os import environ, remove, close
+from os import remove, close, environ
 from os.path import basename, exists
 from tempfile import mkstemp
 from json import dumps
@@ -19,6 +19,7 @@ from qiita_client.testing import PluginTestCase
 from qiita_client.exceptions import BadRequestError
 
 CLIENT_ID = '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4'
+BAD_CLIENT_ID = 'NOT_A_CLIENT_ID'
 CLIENT_SECRET = ('J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKh'
                  'AmmCWZuabe0O5Mp28s1')
 
@@ -96,9 +97,12 @@ class UtilTests(TestCase):
 
 class QiitaClientTests(PluginTestCase):
     def setUp(self):
-        self.server_cert = environ.get('QIITA_SERVER_CERT', None)
-        self.tester = QiitaClient("https://localhost:21174", CLIENT_ID,
-                                  CLIENT_SECRET, server_cert=self.server_cert)
+        self.tester = QiitaClient("https://localhost:21174",
+                                  CLIENT_ID,
+                                  CLIENT_SECRET)
+        self.bad_tester = QiitaClient("https://localhost:21174",
+                                      BAD_CLIENT_ID,
+                                      CLIENT_SECRET)
         self.clean_up_files = []
 
         # making assertRaisesRegex compatible with Python 2.7 and 3.9
@@ -111,12 +115,14 @@ class QiitaClientTests(PluginTestCase):
                 remove(fp)
 
     def test_init(self):
-        obs = QiitaClient("https://localhost:21174", CLIENT_ID,
-                          CLIENT_SECRET, server_cert=self.server_cert)
+        obs = QiitaClient("https://localhost:21174",
+                          CLIENT_ID,
+                          CLIENT_SECRET,
+                          ca_cert=environ['QIITA_ROOT_CA'])
         self.assertEqual(obs._server_url, "https://localhost:21174")
         self.assertEqual(obs._client_id, CLIENT_ID)
         self.assertEqual(obs._client_secret, CLIENT_SECRET)
-        self.assertEqual(obs._verify, self.server_cert)
+        self.assertEqual(obs._verify, environ['QIITA_ROOT_CA'])
 
     def test_get(self):
         obs = self.tester.get("/qiita_db/artifacts/1/")
@@ -232,11 +238,36 @@ class QiitaClientTests(PluginTestCase):
         obs = self.tester.update_job_step(job_id, new_step)
         self.assertIsNone(obs)
 
+    def test_update_job_step_ignore_failure(self):
+        job_id = "bcc7ebcd-39c1-43e4-af2d-822e3589f14d"
+        new_step = "some new step"
+
+        # confirm that update_job_step behaves as before when ignore_error
+        # parameter absent or set to False.
+
+        with self.assertRaises(BaseException):
+            self.bad_tester.update_job_step(job_id, new_step)
+
+        with self.assertRaises(BaseException):
+            self.bad_tester.update_job_step(job_id,
+                                            new_step,
+                                            ignore_error=False)
+
+        # confirm that when ignore_error is set to True, an Error is NOT
+        # raised.
+        try:
+            self.bad_tester.update_job_step(job_id,
+                                            new_step,
+                                            ignore_error=True)
+        except BaseException as e:
+            self.fail("update_job_step() raised an error: %s" % str(e))
+
     def test_complete_job(self):
         # Create a new job
         data = {
             'user': 'demo@microbio.me',
-            'command': dumps(['QIIME', '1.9.1', 'Pick closed-reference OTUs']),
+            'command': dumps(['QIIMEq2', '1.9.1',
+                              'Pick closed-reference OTUs']),
             'status': 'running',
             'parameters': dumps({"reference": 1,
                                  "sortmerna_e_value": 1,
