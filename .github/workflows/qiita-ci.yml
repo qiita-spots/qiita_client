@@ -118,6 +118,7 @@ jobs:
         run: |
           conda activate qiita_client
           export QIITA_ROOTCA_CERT=`pwd`/qiita-dev/qiita_core/support_files/ci_rootca.crt
+          export QIITA_SERVER_CERT=$QIITA_ROOTCA_CERT
           export QIITA_CONFIG_FP=`pwd`/qiita-dev/qiita_core/support_files/config_test_local.cfg
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
           nosetests --with-doctest --with-coverage --cover-package=qiita_client
