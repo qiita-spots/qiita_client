@@ -379,5 +379,6 @@ PLUGIN_TYPE = %s
 PUBLICATIONS = %s
 
 [oauth2]
+SERVER_CERT = %s
 CLIENT_ID = %s
 CLIENT_SECRET = %s"""
