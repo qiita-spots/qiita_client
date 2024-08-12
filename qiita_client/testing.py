@@ -30,7 +30,7 @@ class PluginTestCase(TestCase):
         # do not rely on defining ca_cert for these tests. Instead append
         # the appropriate CA cert to certifi's pem file.
         cls.qclient = QiitaClient("https://localhost:%d" % qiita_port,
-                                  cls.client_id, cls.rootca)
+                                  cls.client_id, cls.client_secret, cls.rootca)
 
         logger.debug(
             'PluginTestCase.setUpClass() token %s' % cls.qclient._token)
