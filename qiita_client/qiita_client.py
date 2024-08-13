@@ -28,9 +28,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 JOB_COMPLETED = False
-# if the log level is DEBUG we should never expect slow response so let's
-# make the retries as small as posible
-if logger.level == logging.DEBUG:
+# if the log level is not CRITICAL, the default, then we not expect slow
+# responses from the server so let's make the retries values small
+if logger.level != logging.CRITICAL:
     MAX_RETRIES = 1
     MIN_TIME_SLEEP = 1
     MAX_TIME_SLEEP = 3
