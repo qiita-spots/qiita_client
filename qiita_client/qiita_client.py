@@ -32,7 +32,7 @@ JOB_COMPLETED = False
 # make the retries as small as posible
 if logger.level == logging.DEBUG:
     MAX_RETRIES = 1
-    MIN_TIME_SLEEP = 1
+    MIN_TIME_SLEEP = 0
     MAX_TIME_SLEEP = 2
 else:
     MAX_RETRIES = 3
