@@ -97,7 +97,7 @@ class UtilTests(TestCase):
 
 class QiitaClientTests(PluginTestCase):
     def setUp(self):
-        self.ca_cert = environ['QIITA_ROOT_CA']
+        self.ca_cert = environ.get('QIITA_ROOT_CA', None)
         self.tester = QiitaClient("https://localhost:21174",
                                   CLIENT_ID,
                                   CLIENT_SECRET,
