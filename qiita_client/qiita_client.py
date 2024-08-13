@@ -28,9 +28,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 JOB_COMPLETED = False
-MAX_RETRIES = 3
-MIN_TIME_SLEEP = 1
-MAX_TIME_SLEEP = 3
+# if the log level is DEBUG we should never expect slow response so let's
+# make the retries as small as posible
+if logger.level == logging.DEBUG:
+    MAX_RETRIES = 1
+    MIN_TIME_SLEEP = 1
+    MAX_TIME_SLEEP = 2
+else:
+    MAX_RETRIES = 3
+    MIN_TIME_SLEEP = 180
+    MAX_TIME_SLEEP = 3
 BLANK_FILE_THRESHOLD = 100
 
 

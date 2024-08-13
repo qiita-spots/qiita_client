@@ -97,12 +97,15 @@ class UtilTests(TestCase):
 
 class QiitaClientTests(PluginTestCase):
     def setUp(self):
+        self.ca_cert = environ['QIITA_ROOT_CA']
         self.tester = QiitaClient("https://localhost:21174",
                                   CLIENT_ID,
-                                  CLIENT_SECRET)
+                                  CLIENT_SECRET,
+                                  self.ca_cert)
         self.bad_tester = QiitaClient("https://localhost:21174",
                                       BAD_CLIENT_ID,
-                                      CLIENT_SECRET)
+                                      CLIENT_SECRET,
+                                      self.ca_cert)
         self.clean_up_files = []
 
         # making assertRaisesRegex compatible with Python 2.7 and 3.9
@@ -118,11 +121,11 @@ class QiitaClientTests(PluginTestCase):
         obs = QiitaClient("https://localhost:21174",
                           CLIENT_ID,
                           CLIENT_SECRET,
-                          ca_cert=environ['QIITA_ROOT_CA'])
+                          ca_cert=self.ca_cert)
         self.assertEqual(obs._server_url, "https://localhost:21174")
         self.assertEqual(obs._client_id, CLIENT_ID)
         self.assertEqual(obs._client_secret, CLIENT_SECRET)
-        self.assertEqual(obs._verify, environ['QIITA_ROOT_CA'])
+        self.assertEqual(obs._verify, self.ca_cert)
 
     def test_get(self):
         obs = self.tester.get("/qiita_db/artifacts/1/")
