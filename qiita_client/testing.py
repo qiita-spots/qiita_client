@@ -25,7 +25,7 @@ class PluginTestCase(TestCase):
         cls.client_secret = ('J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKh'
                              'AmmCWZuabe0O5Mp28s1')
         cls.rootca = environ.get('QIITA_ROOTCA_CERT', None)
-        qiita_port = int(environ.get('QIITA_PORT', 21174))
+        qiita_port = int(environ.get('QIITA_PORT', 8383))
 
         # do not rely on defining ca_cert for these tests. Instead append
         # the appropriate CA cert to certifi's pem file.
