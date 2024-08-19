@@ -81,6 +81,12 @@ jobs:
           conda activate qiita_client
           pip --quiet install .
 
+          # Note that the qiita conda environment has installed the qiita_client "master branch"
+          # but to fully test we need to install the current branch of qiita_client
+          conda deactivate
+          conda activate qiita
+          pip --quiet install .
+
       - name: Starting Main Services
         shell: bash -l {0}
         run: |

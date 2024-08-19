@@ -97,15 +97,11 @@ class UtilTests(TestCase):
 
 class QiitaClientTests(PluginTestCase):
     def setUp(self):
-        self.ca_cert = environ.get('QIITA_ROOT_CA', None)
+        self.ca_cert = environ.get('QIITA_ROOT_CA')
         self.tester = QiitaClient("https://localhost:8383",
                                   CLIENT_ID,
                                   CLIENT_SECRET,
                                   self.ca_cert)
-        self.bad_tester = QiitaClient("https://localhost:8383",
-                                      BAD_CLIENT_ID,
-                                      CLIENT_SECRET,
-                                      self.ca_cert)
         self.clean_up_files = []
 
         # making assertRaisesRegex compatible with Python 2.7 and 3.9
@@ -247,6 +243,10 @@ class QiitaClientTests(PluginTestCase):
 
         # confirm that update_job_step behaves as before when ignore_error
         # parameter absent or set to False.
+        self.bad_tester = QiitaClient("https://localhost:8383",
+                                      BAD_CLIENT_ID,
+                                      CLIENT_SECRET,
+                                      self.ca_cert)
 
         with self.assertRaises(BaseException):
             self.bad_tester.update_job_step(job_id, new_step)
