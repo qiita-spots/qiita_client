@@ -15,7 +15,7 @@ from qiita_client import QiitaClient
 import logging
 
 logger = logging.getLogger(__name__)
-URL = "https://localhost:8383"
+URL = "https://127.0.0.1:8383"
 
 
 class PluginTestCase(TestCase):
