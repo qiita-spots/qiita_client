@@ -32,8 +32,8 @@ JOB_COMPLETED = False
 # responses from the server so let's make the retries values small
 if logger.level != logging.CRITICAL:
     MAX_RETRIES = 2
-    MIN_TIME_SLEEP = 3
-    MAX_TIME_SLEEP = 10
+    MIN_TIME_SLEEP = 2
+    MAX_TIME_SLEEP = 5
 else:
     MAX_RETRIES = 3
     MIN_TIME_SLEEP = 180

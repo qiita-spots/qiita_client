@@ -15,7 +15,7 @@ import pandas as pd
 
 from qiita_client.qiita_client import (QiitaClient, _format_payload,
                                        ArtifactInfo)
-from qiita_client.testing import PluginTestCase
+from qiita_client.testing import PluginTestCase, URL
 from qiita_client.exceptions import BadRequestError
 
 CLIENT_ID = '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4'
@@ -97,11 +97,9 @@ class UtilTests(TestCase):
 
 class QiitaClientTests(PluginTestCase):
     def setUp(self):
-        self.ca_cert = environ.get('QIITA_ROOT_CA')
-        self.tester = QiitaClient("https://localhost:8383",
+        self.tester = QiitaClient(URL,
                                   CLIENT_ID,
-                                  CLIENT_SECRET,
-                                  self.ca_cert)
+                                  CLIENT_SECRET, self.ca_cert)
         self.clean_up_files = []
 
         # making assertRaisesRegex compatible with Python 2.7 and 3.9
@@ -114,11 +112,11 @@ class QiitaClientTests(PluginTestCase):
                 remove(fp)
 
     def test_init(self):
-        obs = QiitaClient("https://localhost:8383",
+        obs = QiitaClient(URL,
                           CLIENT_ID,
                           CLIENT_SECRET,
                           ca_cert=self.ca_cert)
-        self.assertEqual(obs._server_url, "https://localhost:8383")
+        self.assertEqual(obs._server_url, URL)
         self.assertEqual(obs._client_id, CLIENT_ID)
         self.assertEqual(obs._client_secret, CLIENT_SECRET)
         self.assertEqual(obs._verify, self.ca_cert)
@@ -243,13 +241,14 @@ class QiitaClientTests(PluginTestCase):
 
         # confirm that update_job_step behaves as before when ignore_error
         # parameter absent or set to False.
-        self.bad_tester = QiitaClient("https://localhost:8383",
+        self.bad_tester = QiitaClient(URL,
                                       BAD_CLIENT_ID,
                                       CLIENT_SECRET,
                                       self.ca_cert)
 
         with self.assertRaises(BaseException):
-            self.bad_tester.update_job_step(job_id, new_step)
+            self.bad_tester.update_job_step(
+                job_id, new_step, ignore_error=False)
 
         with self.assertRaises(BaseException):
             self.bad_tester.update_job_step(job_id,

@@ -16,8 +16,8 @@ from tempfile import mkdtemp
 from qiita_client.testing import PluginTestCase
 from qiita_client import (QiitaPlugin, QiitaTypePlugin, QiitaCommand,
                           QiitaArtifactType, ArtifactInfo)
-from .testing import URL
 
+URL = 'https://localhost:21174'
 
 class QiitaCommandTest(TestCase):
     def setUp(self):
