@@ -13,11 +13,10 @@ from shutil import rmtree
 from json import dumps
 from tempfile import mkdtemp
 
-from qiita_client.testing import PluginTestCase
+from qiita_client.testing import PluginTestCase, URL
 from qiita_client import (QiitaPlugin, QiitaTypePlugin, QiitaCommand,
                           QiitaArtifactType, ArtifactInfo)
 
-URL = 'https://localhost:21174'
 
 class QiitaCommandTest(TestCase):
     def setUp(self):
@@ -169,7 +168,7 @@ class QiitaTypePluginTest(PluginTestCase):
                                  validate_func, html_generator_func, atypes)
 
         # Generate the config file for the new plugin
-        tester.generate_config('ls', 'echo')
+        tester.generate_config('ls', 'echo', self.ca_cert)
         # Ask Qiita to reload the plugins
         self.qclient.post('/apitest/reload_plugins/')
 
@@ -213,7 +212,7 @@ class QiitaPluginTest(PluginTestCase):
                              {'out1': 'Demultiplexed'})
         tester.register_command(a_cmd)
 
-        tester.generate_config('ls', 'echo')
+        tester.generate_config('ls', 'echo', self.ca_cert)
         self.qclient.post('/apitest/reload_plugins/')
         tester(URL, 'register', 'ignored')
 

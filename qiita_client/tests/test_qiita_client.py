@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os import remove, close, environ
+from os import remove, close
 from os.path import basename, exists
 from tempfile import mkstemp
 from json import dumps
