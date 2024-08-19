@@ -13,7 +13,7 @@ from shutil import rmtree
 from json import dumps
 from tempfile import mkdtemp
 
-from qiita_client.testing import PluginTestCase
+from qiita_client.testing import PluginTestCase, URL
 from qiita_client import (QiitaPlugin, QiitaTypePlugin, QiitaCommand,
                           QiitaArtifactType, ArtifactInfo)
 
@@ -146,7 +146,8 @@ class QiitaTypePluginTest(PluginTestCase):
                      'PLUGIN_TYPE = artifact definition\n',
                      'PUBLICATIONS = \n',
                      '\n',
-                     '[oauth2]\n']
+                     '[oauth2]\n',
+                     'SERVER_CERT = \n']
         # We will test the last 2 lines independently since they're variable
         # in each test run
         self.assertEqual(conf[:-2], exp_lines)
@@ -167,12 +168,12 @@ class QiitaTypePluginTest(PluginTestCase):
                                  validate_func, html_generator_func, atypes)
 
         # Generate the config file for the new plugin
-        tester.generate_config('ls', 'echo')
+        tester.generate_config('ls', 'echo', self.ca_cert)
         # Ask Qiita to reload the plugins
         self.qclient.post('/apitest/reload_plugins/')
 
         # Install the current plugin
-        tester("https://localhost:21174", 'register', 'ignored')
+        tester(URL, 'register', 'ignored')
 
         # Check that it has been installed
         obs = self.qclient.get('/qiita_db/plugins/NewPlugin/1.0.0/')
@@ -211,9 +212,9 @@ class QiitaPluginTest(PluginTestCase):
                              {'out1': 'Demultiplexed'})
         tester.register_command(a_cmd)
 
-        tester.generate_config('ls', 'echo')
+        tester.generate_config('ls', 'echo', self.ca_cert)
         self.qclient.post('/apitest/reload_plugins/')
-        tester("https://localhost:21174", 'register', 'ignored')
+        tester(URL, 'register', 'ignored')
 
         obs = self.qclient.get('/qiita_db/plugins/NewPlugin/0.0.1/')
         self.assertEqual(obs['name'], 'NewPlugin')
@@ -229,7 +230,7 @@ class QiitaPluginTest(PluginTestCase):
                 'status': 'queued'}
         job_id = self.qclient.post('/apitest/processing_job/',
                                    data=data)['job']
-        tester("https://localhost:21174", job_id, self.outdir)
+        tester(URL, job_id, self.outdir)
 
         status = self._wait_for_running_job(job_id)
         self.assertEqual(status, 'success')

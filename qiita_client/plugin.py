@@ -250,7 +250,7 @@ class BaseQiitaPlugin(object):
                               # this value will prevent underlying libraries
                               # from validating the server's cert using
                               # certifi's pem cache.
-                              ca_cert=environ['QIITA_ROOTCA_CERT'])
+                              ca_cert=config.get('oauth2', 'SERVER_CERT'))
 
         if job_id == 'register':
             self._register(qclient)
@@ -379,5 +379,6 @@ PLUGIN_TYPE = %s
 PUBLICATIONS = %s
 
 [oauth2]
+SERVER_CERT = %s
 CLIENT_ID = %s
 CLIENT_SECRET = %s"""

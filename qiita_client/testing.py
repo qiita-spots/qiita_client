@@ -15,6 +15,7 @@ from qiita_client import QiitaClient
 import logging
 
 logger = logging.getLogger(__name__)
+URL = "https://localhost:8383"
 
 
 class PluginTestCase(TestCase):
@@ -24,12 +25,13 @@ class PluginTestCase(TestCase):
         cls.client_id = '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4'
         cls.client_secret = ('J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKh'
                              'AmmCWZuabe0O5Mp28s1')
-        qiita_port = int(environ.get('QIITA_PORT', 21174))
+        cls.ca_cert = environ.get('QIITA_ROOTCA_CERT')
 
         # do not rely on defining ca_cert for these tests. Instead append
         # the appropriate CA cert to certifi's pem file.
-        cls.qclient = QiitaClient("https://localhost:%d" % qiita_port,
-                                  cls.client_id, cls.client_secret)
+        cls.qclient = QiitaClient(
+            URL, cls.client_id, cls.client_secret, cls.ca_cert)
+
         logger.debug(
             'PluginTestCase.setUpClass() token %s' % cls.qclient._token)
         cls.qclient.post('/apitest/reload_plugins/')
