@@ -171,15 +171,25 @@ class QiitaClientTests(PluginTestCase):
             self.tester.post("/qiita_db/artifacts/1/type/")
 
     def test_patch(self):
+        artifact_id = '2'
+
+        # before we patch the artifact by adding the html_summary, the
+        # html_summary should be None
+        self.assertIsNone(self.tester.get_artifact_html_summary(artifact_id))
+
+        # now, let's patch
         fd, fp = mkstemp()
         close(fd)
         with open(fp, 'w') as f:
             f.write('\n')
         self.clean_up_files.append(fp)
-
-        obs = self.tester.patch('/qiita_db/artifacts/2/', 'add',
+        obs = self.tester.patch(f'/qiita_db/artifacts/{artifact_id}/', 'add',
                                 '/html_summary/', value=fp)
         self.assertIsNone(obs)
+
+        # now, the html_summary should contain the filename fp
+        self.assertTrue(
+            basename(fp) in self.tester.get_artifact_html_summary(artifact_id))
 
     def test_patch_error(self):
         with self.assertRaises(BadRequestError):
