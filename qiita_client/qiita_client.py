@@ -629,6 +629,28 @@ class QiitaClient(object):
 
         return files, prep_info
 
+    def get_artifact_html_summary(self, artifact_id):
+        """Gets the artifact html_summary
+
+        Parameters
+        ----------
+        artifact_id : int
+            The artifact id
+
+        Returns
+        -------
+        None or str
+            filepath of the artifact html_summary
+        """
+        html_summary_fp = None
+        artifact_info = self.get("/qiita_db/artifacts/%s/" % artifact_id)
+
+        if 'html_summary' in artifact_info['files']:
+            html_summary_fp = artifact_info[
+                'files']['html_summary'][0]['filepath']
+
+        return html_summary_fp
+
     def _process_files_per_sample_fastq(self, files, prep_info,
                                         ignore_small_files):
         "helper function to process per_sample_FASTQ artifacts and their preps"
