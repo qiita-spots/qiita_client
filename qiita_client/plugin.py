@@ -188,7 +188,8 @@ class BaseQiitaPlugin(object):
         command: QiitaCommand
             The command to be added to the plugin
         """
-        logger.debug(f'Entered BaseQiitaPlugin._register_command({command.name}, {command})')
+        logger.debug(
+            f'Entered BaseQiitaPlugin._register_command({command.name})')
         self.task_dict[command.name] = command
 
     def _register(self, qclient):
