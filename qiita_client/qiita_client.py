@@ -31,9 +31,9 @@ JOB_COMPLETED = False
 # if the log level is not CRITICAL, the default, then we not expect slow
 # responses from the server so let's make the retries values small
 if logger.level != logging.CRITICAL:
-    MAX_RETRIES = 2
-    MIN_TIME_SLEEP = 2
-    MAX_TIME_SLEEP = 5
+    MAX_RETRIES = 1
+    MIN_TIME_SLEEP = 6
+    MAX_TIME_SLEEP = 12
 else:
     MAX_RETRIES = 3
     MIN_TIME_SLEEP = 180
