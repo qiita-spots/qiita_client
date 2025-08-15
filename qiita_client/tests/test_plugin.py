@@ -150,7 +150,7 @@ class QiitaTypePluginTest(PluginTestCase):
                      'SERVER_CERT = \n',
                      '\n',
                      '[network]\n',
-                     'plugincoupling = \n']
+                     'PLUGINCOUPLING = \n']
         # We will test the last 2 lines independently since they're variable
         # in each test run
         self.assertEqual(conf[:-2], exp_lines)
