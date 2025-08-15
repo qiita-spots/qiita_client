@@ -136,12 +136,31 @@ class QiitaArtifactType(object):
 
 
 class BaseQiitaPlugin(object):
-    def __init__(self, name, version, description, publications=None):
+    def __init__(self, name, version, description, publications=None, plugincoupling='filesystem'):
         logger.debug('Entered BaseQiitaPlugin.__init__()')
         self.name = name
         self.version = version
         self.description = description
         self.publications = dumps(publications) if publications else ""
+
+        # Depending on your compute architecture, there are multiple options available how
+        # "thight" plugins are coupled to the central Qiita master/workers
+        # --- filesystem ---
+        # The default scenario is "filesystem", i.e. plugins as well as master/worker have
+        # unrestricted direct access to a shared filesystem, e.g. a larger volume / directory,
+        # defined in the server configuration as base_data_dir
+        # --- https ---
+        # A second scenario is that your plugins execute as independent jobs on another machine,
+        # e.g. as docker containers or other cloud techniques. Intentionally, you don't want to
+        # use a shared filesystem, but you have to make sure necessary input files are 
+        # provided to the containerized plugin before execution and resulting files are
+        # transfered back to the central Qiita master/worker. In this case, files are
+        # pulled / pushed through functions qiita_client.fetch_file_from_central and
+        # qiita_client.push_file_to_central, respectivey.
+        # Actually, all files need to be decorated with this function. The decision how
+        # data are transferred is then made within these two functions according to the
+        # "plugincoupling" setting.
+        self.plugincoupling = plugincoupling
 
         # Will hold the different commands
         self.task_dict = {}
@@ -178,7 +197,8 @@ class BaseQiitaPlugin(object):
             f.write(CONF_TEMPLATE % (self.name, self.version, self.description,
                                      env_script, start_script,
                                      self._plugin_type, self.publications,
-                                     server_cert, client_id, client_secret))
+                                     server_cert, client_id, client_secret,
+                                     self.plugincoupling))
 
     def _register_command(self, command):
         """Registers a command in the plugin
@@ -314,9 +334,11 @@ class QiitaTypePlugin(BaseQiitaPlugin):
     _plugin_type = "artifact definition"
 
     def __init__(self, name, version, description, validate_func,
-                 html_generator_func, artifact_types, publications=None):
+                 html_generator_func, artifact_types, publications=None,
+                 plugincoupling='filesystem'):
         super(QiitaTypePlugin, self).__init__(name, version, description,
-                                              publications=publications)
+                                              publications=publications,
+                                              plugincoupling=plugincoupling)
 
         logger.debug('Entered QiitaTypePlugin.__init__()')
         self.artifact_types = artifact_types
@@ -378,6 +400,7 @@ ENVIRONMENT_SCRIPT = %s
 START_SCRIPT = %s
 PLUGIN_TYPE = %s
 PUBLICATIONS = %s
+PLUGINCOUPLING = %s
 
 [oauth2]
 SERVER_CERT = %s
