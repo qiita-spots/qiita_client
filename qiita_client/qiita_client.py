@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import os
 import time
 import requests
 import threading
@@ -253,13 +254,16 @@ class QiitaClient(object):
             # Timeout, etc. and logs them
             logger.debug(str(e))
 
-    def _request_oauth2(self, req, *args, **kwargs):
+    def _request_oauth2(self, req, rettype, *args, **kwargs):
         """Executes a request using OAuth2 authorization
 
         Parameters
         ----------
         req : function
             The request to execute
+        rettype : string
+            The return type of the function, either "json" or
+            if e.g. files are transferred "content"
         args : tuple
             The request args
         kwargs : dict
@@ -309,13 +313,16 @@ class QiitaClient(object):
                     r = req(*args, **kwargs)
         return r
 
-    def _request_retry(self, req, url, **kwargs):
+    def _request_retry(self, req, url, rettype='json', **kwargs):
         """Executes a request retrying it 2 times in case of failure
 
         Parameters
         ----------
         req : function
             The request to execute
+        rettype : string
+            The return type of the function, either "json" (default) or
+            if e.g. files are transferred "content"
         url : str
             The url to access in the server
         kwargs : dict
@@ -323,7 +330,7 @@ class QiitaClient(object):
 
         Returns
         -------
-        dict or None
+        dict or None or plain content IF rettype='content'
             The JSON information in the request response, if any
 
         Raises
@@ -358,7 +365,7 @@ class QiitaClient(object):
         retries = MAX_RETRIES
         while retries > 0:
             retries -= 1
-            r = self._request_oauth2(req, url, verify=self._verify, **kwargs)
+            r = self._request_oauth2(req, rettype, url, verify=self._verify, **kwargs)
             r.close()
             # There are some error codes that the specification says that they
             # shouldn't be retried
@@ -374,7 +381,13 @@ class QiitaClient(object):
                     "Message: %s" % (req.__name__, url, r.status_code, r.text))
             elif 0 <= (r.status_code - 200) < 100:
                 try:
-                    return r.json()
+                    if rettype is None or rettype == 'json':
+                        return r.json()
+                    else:
+                        if rettype == 'content':
+                            return r.content
+                        else:
+                            raise ValueError("return type rettype='%s' cannot be understand. Choose from 'json' (default) or 'content!" % rettype)
                 except ValueError:
                     return None
             stime = randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
@@ -386,13 +399,16 @@ class QiitaClient(object):
             "Request '%s %s' did not succeed. Status code: %d. Message: %s"
             % (req.__name__, url, r.status_code, r.text))
 
-    def get(self, url, **kwargs):
+    def get(self, url, rettype='json', **kwargs):
         """Execute a get request against the Qiita server
 
         Parameters
         ----------
         url : str
             The url to access in the server
+        rettype : string
+            The return type of the function, either "json" (default) or
+            if e.g. files are transferred "content"
         kwargs : dict
             The request kwargs
 
@@ -402,7 +418,7 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.get()')
-        return self._request_retry(self._session.get, url, **kwargs)
+        return self._request_retry(self._session.get, url, rettype=rettype, **kwargs)
 
     def post(self, url, **kwargs):
         """Execute a post request against the Qiita server
@@ -420,7 +436,7 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.post(%s)' % url)
-        return self._request_retry(self._session.post, url, **kwargs)
+        return self._request_retry(self._session.post, url, rettype='json', **kwargs)
 
     def patch(self, url, op, path, value=None, from_p=None, **kwargs):
         """Executes a JSON patch request against the Qiita server
@@ -479,7 +495,7 @@ class QiitaClient(object):
         # we made sure that data is correctly formatted here
         kwargs['data'] = data
 
-        return self._request_retry(self._session.patch, url, **kwargs)
+        return self._request_retry(self._session.patch, url, rettype='json', **kwargs)
 
     # The functions are shortcuts for common functionality that all plugins
     # need to implement.
@@ -502,7 +518,7 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.http_patch()')
-        return self._request_retry(self._session.patch, url, **kwargs)
+        return self._request_retry(self._session.patch, url, rettype='json', **kwargs)
 
     def start_heartbeat(self, job_id):
         """Create and start a thread that would send heartbeats to the server
@@ -714,3 +730,26 @@ class QiitaClient(object):
         prep_info = prep_info.filter(items=sample_names.keys(), axis=0)
 
         return sample_names, prep_info
+
+    def fetch_file_from_central(self, filepath):
+        logger.debug('Requesting file %s from qiita server.' % filepath)
+
+        # actual call to Qiita central to obtain file content
+        content = self.get('/cloud/fetch_file_from_central/' + filepath, rettype='content')
+
+        # create necessary directory locally
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+        # write retrieved file content
+        with open(filepath, 'wb') as f:
+            f.write(content)
+
+        return filepath
+
+    def push_file_to_central(self, filepath):
+        logger.debug('Submitting file %s to qiita server.' % filepath)
+
+        self.post('/cloud/push_file_to_central/',
+            files={os.path.dirname(filepath): open(filepath, 'rb')})
+
+        return filepath
