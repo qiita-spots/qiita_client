@@ -136,7 +136,8 @@ class QiitaArtifactType(object):
 
 
 class BaseQiitaPlugin(object):
-    def __init__(self, name, version, description, publications=None, plugincoupling='filesystem'):
+    _ALLOWED_PLUGIN_COUPLINGS = ['filesystem', 'https']  # default must be first element
+    def __init__(self, name, version, description, publications=None, plugincoupling=_ALLOWED_PLUGIN_COUPLINGS[0]):
         logger.debug('Entered BaseQiitaPlugin.__init__()')
         self.name = name
         self.version = version
@@ -160,6 +161,8 @@ class BaseQiitaPlugin(object):
         # Actually, all files need to be decorated with this function. The decision how
         # data are transferred is then made within these two functions according to the
         # "plugincoupling" setting.
+        if plugincoupling not in self._ALLOWED_PLUGIN_COUPLINGS:
+            raise ValueError("valid plugincoupling values are ['%s'], but you provided %s" % ("', '".join(self._ALLOWED_PLUGIN_COUPLINGS), plugincoupling))
         self.plugincoupling = plugincoupling
 
         # Will hold the different commands
@@ -170,7 +173,7 @@ class BaseQiitaPlugin(object):
             'QIITA_PLUGINS_DIR', join(expanduser('~'), '.qiita_plugins'))
         self.conf_fp = join(conf_dir, "%s_%s.conf" % (self.name, self.version))
 
-    def generate_config(self, env_script, start_script, server_cert=None):
+    def generate_config(self, env_script, start_script, server_cert=None, plugin_couling=_ALLOWED_PLUGIN_COUPLINGS[0]):
         """Generates the plugin configuration file
 
         Parameters
@@ -184,6 +187,9 @@ class BaseQiitaPlugin(object):
             If the Qiita server used does not have a valid certificate, the
             path to the Qiita certificate so the plugin can connect over
             HTTPS to it
+        plugin_coupling : str
+            Type of coupling of plugin to central for file exchange. 
+            Valid values are 'filesystem' and 'https'.
         """
         logger.debug('Entered BaseQiitaPlugin.generate_config()')
         sr = SystemRandom()
@@ -198,7 +204,7 @@ class BaseQiitaPlugin(object):
                                      env_script, start_script,
                                      self._plugin_type, self.publications,
                                      server_cert, client_id, client_secret,
-                                     self.plugincoupling))
+                                     plugin_couling))
 
     def _register_command(self, command):
         """Registers a command in the plugin
@@ -208,8 +214,7 @@ class BaseQiitaPlugin(object):
         command: QiitaCommand
             The command to be added to the plugin
         """
-        logger.debug(
-            f'Entered BaseQiitaPlugin._register_command({command.name})')
+        logger.debug('Entered BaseQiitaPlugin._register_command(%s)' % command.name)
         self.task_dict[command.name] = command
 
     def _register(self, qclient):
@@ -271,7 +276,8 @@ class BaseQiitaPlugin(object):
                               # this value will prevent underlying libraries
                               # from validating the server's cert using
                               # certifi's pem cache.
-                              ca_cert=config.get('oauth2', 'SERVER_CERT'))
+                              ca_cert=config.get('oauth2', 'SERVER_CERT'),
+                              plugincoupling=config.get('network', 'PLUGINCOUPLING'))
 
         if job_id == 'register':
             self._register(qclient)
@@ -335,7 +341,7 @@ class QiitaTypePlugin(BaseQiitaPlugin):
 
     def __init__(self, name, version, description, validate_func,
                  html_generator_func, artifact_types, publications=None,
-                 plugincoupling='filesystem'):
+                 plugincoupling=BaseQiitaPlugin._ALLOWED_PLUGIN_COUPLINGS[0]):
         super(QiitaTypePlugin, self).__init__(name, version, description,
                                               publications=publications,
                                               plugincoupling=plugincoupling)
@@ -400,9 +406,12 @@ ENVIRONMENT_SCRIPT = %s
 START_SCRIPT = %s
 PLUGIN_TYPE = %s
 PUBLICATIONS = %s
-PLUGINCOUPLING = %s
 
 [oauth2]
 SERVER_CERT = %s
 CLIENT_ID = %s
-CLIENT_SECRET = %s"""
+CLIENT_SECRET = %s
+
+[network]
+PLUGINCOUPLING = %s
+"""

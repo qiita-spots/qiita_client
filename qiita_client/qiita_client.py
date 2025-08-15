@@ -183,7 +183,7 @@ class QiitaClient(object):
     get
     post
     """
-    def __init__(self, server_url, client_id, client_secret, ca_cert=None):
+    def __init__(self, server_url, client_id, client_secret, ca_cert=None, plugincoupling='filesystem'):
         self._server_url = server_url
         self._session = requests.Session()
 
@@ -218,6 +218,8 @@ class QiitaClient(object):
         # Fetch the access token
         self._token = None
         self._fetch_token()
+
+        self._plugincoupling = plugincoupling
 
     def _fetch_token(self):
         """Retrieves an access token from the Qiita server
@@ -732,24 +734,36 @@ class QiitaClient(object):
         return sample_names, prep_info
 
     def fetch_file_from_central(self, filepath):
-        logger.debug('Requesting file %s from qiita server.' % filepath)
+        if self._plugincoupling == 'filesystem':
+            return filepath
 
-        # actual call to Qiita central to obtain file content
-        content = self.get('/cloud/fetch_file_from_central/' + filepath, rettype='content')
+        if self._plugincoupling == 'https':
+            logger.debug('Requesting file %s from qiita server.' % filepath)
 
-        # create necessary directory locally
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            # actual call to Qiita central to obtain file content
+            content = self.get('/cloud/fetch_file_from_central/' + filepath, rettype='content')
 
-        # write retrieved file content
-        with open(filepath, 'wb') as f:
-            f.write(content)
+            # create necessary directory locally
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
-        return filepath
+            # write retrieved file content
+            with open(filepath, 'wb') as f:
+                f.write(content)
+
+            return filepath
+
+        raise ValueError("File communication protocol '%s' as defined in plugins configuration is NOT defined." % self._plugincoupling)
 
     def push_file_to_central(self, filepath):
-        logger.debug('Submitting file %s to qiita server.' % filepath)
+        if self._plugincoupling == 'filesystem':
+            return filepath
 
-        self.post('/cloud/push_file_to_central/',
-            files={os.path.dirname(filepath): open(filepath, 'rb')})
+        if self._plugincoupling == 'https':
+            logger.debug('Submitting file %s to qiita server.' % filepath)
 
-        return filepath
+            self.post('/cloud/push_file_to_central/',
+                files={os.path.dirname(filepath): open(filepath, 'rb')})
+
+            return filepath
+
+        raise ValueError("File communication protocol '%s' as defined in plugins configuration is NOT defined." % self._plugincoupling)
