@@ -154,7 +154,7 @@ class QiitaTypePluginTest(PluginTestCase):
         self.assertTrue(conf[-5].startswith('CLIENT_ID = '))
         self.assertTrue(conf[-4].startswith('CLIENT_SECRET = '))
         self.assertTrue(conf[-2].startswith('[network]'))
-        self.assertTrue(conf[-2].startswith('PLUGINCOUPLING = '))
+        self.assertTrue(conf[-1].startswith('PLUGINCOUPLING = '))
 
     def test_call(self):
         def validate_func(a, b, c, d):
