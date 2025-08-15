@@ -385,6 +385,17 @@ class QiitaClientTests(PluginTestCase):
         self.assertEqual(fobs, fexp)
         self.assertEqual(piobs.shape, (2, 1))
 
+    def test_fetch_file_from_central(self):
+        self.tester._plugincoupling = 'filesystem'
+
+        ainfo = self.tester.get("/qiita_db/artifacts/%s/" % 1)
+        print("STEFAN", ainfo)
+
+        # fp_query = '/home/runner/work/qiita/qiita/qiita_db/support_files/
+        # test_data/templates/FASTA_QUAL_preprocessing_sample_template.txt'
+        # fp_res = fetch_file_from_central('')
+        pass
+
 
 if __name__ == '__main__':
     main()
