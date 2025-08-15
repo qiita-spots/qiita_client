@@ -136,33 +136,44 @@ class QiitaArtifactType(object):
 
 
 class BaseQiitaPlugin(object):
-    _ALLOWED_PLUGIN_COUPLINGS = ['filesystem', 'https']  # default must be first element
-    def __init__(self, name, version, description, publications=None, plugincoupling=_ALLOWED_PLUGIN_COUPLINGS[0]):
+    # default must be first element
+    _ALLOWED_PLUGIN_COUPLINGS = ['filesystem', 'https']
+
+    def __init__(self, name, version, description, publications=None,
+                 plugincoupling=_ALLOWED_PLUGIN_COUPLINGS[0]):
         logger.debug('Entered BaseQiitaPlugin.__init__()')
         self.name = name
         self.version = version
         self.description = description
         self.publications = dumps(publications) if publications else ""
 
-        # Depending on your compute architecture, there are multiple options available how
-        # "thight" plugins are coupled to the central Qiita master/workers
+        # Depending on your compute architecture, there are multiple options
+        # available how "thight" plugins are coupled to the central
+        # Qiita master/workers
         # --- filesystem ---
-        # The default scenario is "filesystem", i.e. plugins as well as master/worker have
-        # unrestricted direct access to a shared filesystem, e.g. a larger volume / directory,
-        # defined in the server configuration as base_data_dir
+        # The default scenario is "filesystem", i.e. plugins as well as
+        # master/worker have unrestricted direct access to a shared filesystem,
+        # e.g. a larger volume / directory, defined in the server configuration
+        # as base_data_dir
         # --- https ---
-        # A second scenario is that your plugins execute as independent jobs on another machine,
-        # e.g. as docker containers or other cloud techniques. Intentionally, you don't want to
-        # use a shared filesystem, but you have to make sure necessary input files are 
-        # provided to the containerized plugin before execution and resulting files are
-        # transfered back to the central Qiita master/worker. In this case, files are
-        # pulled / pushed through functions qiita_client.fetch_file_from_central and
+        # A second scenario is that your plugins execute as independent jobs on
+        # another machine, e.g. as docker containers or other cloud techniques.
+        # Intentionally, you don't want to use a shared filesystem, but you
+        # have to make sure necessary input files are provided to the
+        # containerized plugin before execution and resulting files are
+        # transfered back to the central Qiita master/worker. In this case,
+        # files are pulled / pushed through functions
+        # qiita_client.fetch_file_from_central and
         # qiita_client.push_file_to_central, respectivey.
-        # Actually, all files need to be decorated with this function. The decision how
-        # data are transferred is then made within these two functions according to the
-        # "plugincoupling" setting.
+        # Actually, all files need to be decorated with this function.
+        # The decision how data are transferred is then made within these two
+        # functions according to the "plugincoupling" setting.
         if plugincoupling not in self._ALLOWED_PLUGIN_COUPLINGS:
-            raise ValueError("valid plugincoupling values are ['%s'], but you provided %s" % ("', '".join(self._ALLOWED_PLUGIN_COUPLINGS), plugincoupling))
+            raise ValueError(
+                ("valid plugincoupling values are ['%s'], but you "
+                 "provided %s") % (
+                     "', '".join(self._ALLOWED_PLUGIN_COUPLINGS),
+                     plugincoupling))
         self.plugincoupling = plugincoupling
 
         # Will hold the different commands
@@ -173,7 +184,8 @@ class BaseQiitaPlugin(object):
             'QIITA_PLUGINS_DIR', join(expanduser('~'), '.qiita_plugins'))
         self.conf_fp = join(conf_dir, "%s_%s.conf" % (self.name, self.version))
 
-    def generate_config(self, env_script, start_script, server_cert=None, plugin_couling=_ALLOWED_PLUGIN_COUPLINGS[0]):
+    def generate_config(self, env_script, start_script, server_cert=None,
+                        plugin_couling=_ALLOWED_PLUGIN_COUPLINGS[0]):
         """Generates the plugin configuration file
 
         Parameters
@@ -188,7 +200,7 @@ class BaseQiitaPlugin(object):
             path to the Qiita certificate so the plugin can connect over
             HTTPS to it
         plugin_coupling : str
-            Type of coupling of plugin to central for file exchange. 
+            Type of coupling of plugin to central for file exchange.
             Valid values are 'filesystem' and 'https'.
         """
         logger.debug('Entered BaseQiitaPlugin.generate_config()')
@@ -214,7 +226,8 @@ class BaseQiitaPlugin(object):
         command: QiitaCommand
             The command to be added to the plugin
         """
-        logger.debug('Entered BaseQiitaPlugin._register_command(%s)' % command.name)
+        logger.debug('Entered BaseQiitaPlugin._register_command(%s)' %
+                     command.name)
         self.task_dict[command.name] = command
 
     def _register(self, qclient):
@@ -277,7 +290,8 @@ class BaseQiitaPlugin(object):
                               # from validating the server's cert using
                               # certifi's pem cache.
                               ca_cert=config.get('oauth2', 'SERVER_CERT'),
-                              plugincoupling=config.get('network', 'PLUGINCOUPLING'))
+                              plugincoupling=config.get('network',
+                                                        'PLUGINCOUPLING'))
 
         if job_id == 'register':
             self._register(qclient)

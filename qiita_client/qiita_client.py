@@ -183,7 +183,8 @@ class QiitaClient(object):
     get
     post
     """
-    def __init__(self, server_url, client_id, client_secret, ca_cert=None, plugincoupling='filesystem'):
+    def __init__(self, server_url, client_id, client_secret, ca_cert=None,
+                 plugincoupling='filesystem'):
         self._server_url = server_url
         self._session = requests.Session()
 
@@ -367,7 +368,8 @@ class QiitaClient(object):
         retries = MAX_RETRIES
         while retries > 0:
             retries -= 1
-            r = self._request_oauth2(req, rettype, url, verify=self._verify, **kwargs)
+            r = self._request_oauth2(
+                req, rettype, url, verify=self._verify, **kwargs)
             r.close()
             # There are some error codes that the specification says that they
             # shouldn't be retried
@@ -389,7 +391,10 @@ class QiitaClient(object):
                         if rettype == 'content':
                             return r.content
                         else:
-                            raise ValueError("return type rettype='%s' cannot be understand. Choose from 'json' (default) or 'content!" % rettype)
+                            raise ValueError(
+                                ("return type rettype='%s' cannot be "
+                                 "understand. Choose from 'json' (default) "
+                                 "or 'content!") % rettype)
                 except ValueError:
                     return None
             stime = randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
@@ -420,7 +425,8 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.get()')
-        return self._request_retry(self._session.get, url, rettype=rettype, **kwargs)
+        return self._request_retry(
+            self._session.get, url, rettype=rettype, **kwargs)
 
     def post(self, url, **kwargs):
         """Execute a post request against the Qiita server
@@ -438,7 +444,8 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.post(%s)' % url)
-        return self._request_retry(self._session.post, url, rettype='json', **kwargs)
+        return self._request_retry(
+            self._session.post, url, rettype='json', **kwargs)
 
     def patch(self, url, op, path, value=None, from_p=None, **kwargs):
         """Executes a JSON patch request against the Qiita server
@@ -497,7 +504,8 @@ class QiitaClient(object):
         # we made sure that data is correctly formatted here
         kwargs['data'] = data
 
-        return self._request_retry(self._session.patch, url, rettype='json', **kwargs)
+        return self._request_retry(
+            self._session.patch, url, rettype='json', **kwargs)
 
     # The functions are shortcuts for common functionality that all plugins
     # need to implement.
@@ -520,7 +528,8 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.http_patch()')
-        return self._request_retry(self._session.patch, url, rettype='json', **kwargs)
+        return self._request_retry(
+            self._session.patch, url, rettype='json', **kwargs)
 
     def start_heartbeat(self, job_id):
         """Create and start a thread that would send heartbeats to the server
@@ -741,7 +750,9 @@ class QiitaClient(object):
             logger.debug('Requesting file %s from qiita server.' % filepath)
 
             # actual call to Qiita central to obtain file content
-            content = self.get('/cloud/fetch_file_from_central/' + filepath, rettype='content')
+            content = self.get(
+                '/cloud/fetch_file_from_central/' + filepath,
+                rettype='content')
 
             # create necessary directory locally
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -752,7 +763,9 @@ class QiitaClient(object):
 
             return filepath
 
-        raise ValueError("File communication protocol '%s' as defined in plugins configuration is NOT defined." % self._plugincoupling)
+        raise ValueError(
+            ("File communication protocol '%s' as defined in plugins "
+             "configuration is NOT defined.") % self._plugincoupling)
 
     def push_file_to_central(self, filepath):
         if self._plugincoupling == 'filesystem':
@@ -761,9 +774,12 @@ class QiitaClient(object):
         if self._plugincoupling == 'https':
             logger.debug('Submitting file %s to qiita server.' % filepath)
 
-            self.post('/cloud/push_file_to_central/',
+            self.post(
+                '/cloud/push_file_to_central/',
                 files={os.path.dirname(filepath): open(filepath, 'rb')})
 
             return filepath
 
-        raise ValueError("File communication protocol '%s' as defined in plugins configuration is NOT defined." % self._plugincoupling)
+        raise ValueError(
+            ("File communication protocol '%s' as defined in plugins "
+             "configuration is NOT defined.") % self._plugincoupling)
