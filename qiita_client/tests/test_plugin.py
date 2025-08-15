@@ -147,7 +147,10 @@ class QiitaTypePluginTest(PluginTestCase):
                      'PUBLICATIONS = \n',
                      '\n',
                      '[oauth2]\n',
-                     'SERVER_CERT = \n']
+                     'SERVER_CERT = \n',
+                     '\n',
+                     '[network]\n',
+                     'plugincoupling = \n']
         # We will test the last 2 lines independently since they're variable
         # in each test run
         self.assertEqual(conf[:-2], exp_lines)
