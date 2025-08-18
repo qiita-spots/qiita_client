@@ -812,6 +812,25 @@ class QiitaClient(object):
                  "configuration is NOT defined.") % self._plugincoupling)
 
     def push_file_to_central(self, filepath):
+        """Pushs filecontent to Qiita's central base_data_dir directory.
+
+        By default, plugin and Qiita's central base_data_dir filesystems are
+        identical. In this case, no files are touched and the filepath is
+        directly returned.
+        If however, plugincoupling is set to 'https', the content of the file
+        is sent via https POST to Qiita's master/worker, which has to receive
+        and store in an appropriate location.
+
+        Parameters
+        ----------
+        filepath : str
+            The filepath of the files whos content shall be send to Qiita's
+            central base_data_dir
+
+        Returns
+        -------
+        The given filepath - to be transparent in plugin code.
+        """
         if self._plugincoupling == 'filesystem':
             return filepath
 

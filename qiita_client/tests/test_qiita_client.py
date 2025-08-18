@@ -9,7 +9,7 @@
 from unittest import TestCase, main
 import filecmp
 from os import remove, close
-from os.path import basename, exists
+from os.path import basename, exists, expanduser, join
 from tempfile import mkstemp
 from json import dumps
 import pandas as pd
@@ -397,9 +397,10 @@ class QiitaClientTests(PluginTestCase):
         self.assertEqual(fp, fp_obs)
 
         # mode: filesystem, prefix='/karl': make file copy
-        self.clean_up_files.append('/karl' + fp)
-        fp_obs = self.tester.fetch_file_from_central(fp, prefix='/karl')
-        self.assertEqual('/karl' + fp, fp_obs)
+        prefix = join(expanduser("~"), '/karl')
+        self.clean_up_files.append(prefix + fp)
+        fp_obs = self.tester.fetch_file_from_central(fp, prefix=prefix)
+        self.assertEqual(prefix + fp, fp_obs)
         self.assertTrue(filecmp.cmp(fp, fp_obs, shallow=False))
 
         # non existing mode
