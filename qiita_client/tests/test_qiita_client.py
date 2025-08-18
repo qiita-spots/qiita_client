@@ -397,7 +397,7 @@ class QiitaClientTests(PluginTestCase):
         self.assertEqual(fp, fp_obs)
 
         # mode: filesystem, prefix='/karl': make file copy
-        prefix = join(expanduser("~"), '/karl')
+        prefix = join(expanduser("~"), 'karl')
         self.clean_up_files.append(prefix + fp)
         fp_obs = self.tester.fetch_file_from_central(fp, prefix=prefix)
         self.assertEqual(prefix + fp, fp_obs)
