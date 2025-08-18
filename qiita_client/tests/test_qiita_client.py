@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+import filecmp
 from os import remove, close
 from os.path import basename, exists
 from tempfile import mkstemp
@@ -389,12 +390,37 @@ class QiitaClientTests(PluginTestCase):
         self.tester._plugincoupling = 'filesystem'
 
         ainfo = self.tester.get("/qiita_db/artifacts/%s/" % 1)
-        print("STEFAN", ainfo)
+        fp = ainfo['files']['raw_forward_seqs'][0]['filepath']
 
-        # fp_query = '/home/runner/work/qiita/qiita/qiita_db/support_files/
-        # test_data/templates/FASTA_QUAL_preprocessing_sample_template.txt'
-        # fp_res = fetch_file_from_central('')
-        pass
+        # mode: filesystem, prefix='': no copy, directly return given fp
+        fp_obs = self.tester.fetch_file_from_central(fp)
+        self.assertEqual(fp, fp_obs)
+
+        # mode: filesystem, prefix='/karl': make file copy
+        self.clean_up_files.append('/karl' + fp)
+        fp_obs = self.tester.fetch_file_from_central(fp, prefix='/karl')
+        self.assertEqual('/karl' + fp, fp_obs)
+        self.assertTrue(filecmp.cmp(fp, fp_obs, shallow=False))
+
+        # non existing mode
+        with self.assertRaises(ValueError):
+            self.tester._plugincoupling = 'foo'
+            self.tester.fetch_file_from_central(fp)
+
+    def test_push_file_to_central(self):
+        self.tester._plugincoupling = 'filesystem'
+
+        ainfo = self.tester.get("/qiita_db/artifacts/%s/" % 1)
+        fp = ainfo['files']['raw_forward_seqs'][0]['filepath']
+
+        # mode: filesystem
+        fp_obs = self.tester.push_file_to_central(fp)
+        self.assertEqual(fp, fp_obs)
+
+        # non existing mode
+        with self.assertRaises(ValueError):
+            self.tester._plugincoupling = 'foo'
+            self.tester.push_file_to_central(fp)
 
 
 if __name__ == '__main__':

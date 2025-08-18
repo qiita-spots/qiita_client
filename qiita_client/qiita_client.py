@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 import os
+import shutil
 import time
 import requests
 import threading
@@ -742,11 +743,53 @@ class QiitaClient(object):
 
         return sample_names, prep_info
 
-    def fetch_file_from_central(self, filepath):
-        if self._plugincoupling == 'filesystem':
-            return filepath
+    def fetch_file_from_central(self, filepath, prefix=''):
+        """Moves content of a file from Qiita's central base_data_dir to a
+           local plugin file-system.
 
-        if self._plugincoupling == 'https':
+           By default, this is exactly the same location, i.e. the return
+           filepath is identical to the requested one and nothing is moved /
+           copied.
+           However, for less tight plugin couplings, file content can be
+           transferred via https for situations where the plugin does not have
+           native access to Qiita's overall base_data_dir.
+
+        Parameters
+        ----------
+        filepath : str
+            The filepath in Qiita's central base_data_dir to the requested
+            file content
+        prefix : str
+            Primarily for testing: prefix the target filepath with this
+            filepath prefix to
+            a) in 'filesystem' mode: create an actual file copy (for testing)
+               If prefix='', nothing will be copied/moved
+            b) in 'https' mode: flexibility to locate files differently in
+               plugin local file system.
+
+        Returns
+        -------
+        str : the filepath of the requested file within the local file system
+        """
+        target_filepath = filepath
+        if prefix != '':
+            # strip off root
+            if filepath.startswith(os.path.abspath(os.sep)):
+                target_filepath = target_filepath[
+                    len(os.path.abspath(os.sep)):]
+            # prefix filepath with given prefix
+            target_filepath = os.path.join(prefix, target_filepath)
+
+        if self._plugincoupling == 'filesystem':
+            if prefix != '':
+                # create necessary directory locally
+                os.makedirs(os.path.dirname(target_filepath), exist_ok=True)
+
+                shutil.copyfile(filepath, target_filepath)
+
+            return target_filepath
+
+        elif self._plugincoupling == 'https':
             logger.debug('Requesting file %s from qiita server.' % filepath)
 
             # actual call to Qiita central to obtain file content
@@ -755,23 +798,24 @@ class QiitaClient(object):
                 rettype='content')
 
             # create necessary directory locally
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            os.makedirs(os.path.dirname(target_filepath), exist_ok=True)
 
             # write retrieved file content
-            with open(filepath, 'wb') as f:
+            with open(target_filepath, 'wb') as f:
                 f.write(content)
 
-            return filepath
+            return target_filepath
 
-        raise ValueError(
-            ("File communication protocol '%s' as defined in plugins "
-             "configuration is NOT defined.") % self._plugincoupling)
+        else:
+            raise ValueError(
+                ("File communication protocol '%s' as defined in plugins "
+                 "configuration is NOT defined.") % self._plugincoupling)
 
     def push_file_to_central(self, filepath):
         if self._plugincoupling == 'filesystem':
             return filepath
 
-        if self._plugincoupling == 'https':
+        elif self._plugincoupling == 'https':
             logger.debug('Submitting file %s to qiita server.' % filepath)
 
             self.post(
