@@ -744,7 +744,7 @@ class QiitaClient(object):
         return sample_names, prep_info
 
     def fetch_file_from_central(self, filepath, prefix=''):
-        """Moves content of a file from Qiita's central base_data_dir to a
+        """Moves content of a file from Qiita's central BASE_DATA_DIR to a
            local plugin file-system.
 
            By default, this is exactly the same location, i.e. the return
@@ -752,12 +752,12 @@ class QiitaClient(object):
            copied.
            However, for less tight plugin couplings, file content can be
            transferred via https for situations where the plugin does not have
-           native access to Qiita's overall base_data_dir.
+           native access to Qiita's overall BASE_DATA_DIR.
 
         Parameters
         ----------
         filepath : str
-            The filepath in Qiita's central base_data_dir to the requested
+            The filepath in Qiita's central BASE_DATA_DIR to the requested
             file content
         prefix : str
             Primarily for testing: prefix the target filepath with this
@@ -812,9 +812,9 @@ class QiitaClient(object):
                  "configuration is NOT defined.") % self._plugincoupling)
 
     def push_file_to_central(self, filepath):
-        """Pushs filecontent to Qiita's central base_data_dir directory.
+        """Pushs filecontent to Qiita's central BASE_DATA_DIR directory.
 
-        By default, plugin and Qiita's central base_data_dir filesystems are
+        By default, plugin and Qiita's central BASE_DATA_DIR filesystems are
         identical. In this case, no files are touched and the filepath is
         directly returned.
         If however, plugincoupling is set to 'https', the content of the file
@@ -825,7 +825,7 @@ class QiitaClient(object):
         ----------
         filepath : str
             The filepath of the files whos content shall be send to Qiita's
-            central base_data_dir
+            central BASE_DATA_DIR
 
         Returns
         -------
