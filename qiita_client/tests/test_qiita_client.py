@@ -412,35 +412,33 @@ class QiitaClientTests(PluginTestCase):
         self.tester._plugincoupling = 'https'
         prefix = join(expanduser("~"), 'kurt')
         self.clean_up_files.append(prefix + fp)
-        print("STEFAN", fp, prefix)
         fp_obs = self.tester.fetch_file_from_central(fp, prefix=prefix)
-        print("STEFAN2", fp_obs)
         self.assertEqual(prefix + fp, fp_obs)
         self.assertTrue(filecmp.cmp(fp, fp_obs, shallow=False))
 
-    # def test_push_file_to_central(self):
-    #     self.tester._plugincoupling = 'filesystem'
+    def test_push_file_to_central(self):
+        self.tester._plugincoupling = 'filesystem'
 
-    #     ainfo = self.tester.get("/qiita_db/artifacts/%s/" % 1)
-    #     fp = ainfo['files']['raw_forward_seqs'][0]['filepath']
+        ainfo = self.tester.get("/qiita_db/artifacts/%s/" % 1)
+        fp = ainfo['files']['raw_forward_seqs'][0]['filepath']
 
-    #     # mode: filesystem
-    #     fp_obs = self.tester.push_file_to_central(fp)
-    #     self.assertEqual(fp, fp_obs)
+        # mode: filesystem
+        fp_obs = self.tester.push_file_to_central(fp)
+        self.assertEqual(fp, fp_obs)
 
-    #     # non existing mode
-    #     with self.assertRaises(ValueError):
-    #         self.tester._plugincoupling = 'foo'
-    #         self.tester.push_file_to_central(fp)
+        # non existing mode
+        with self.assertRaises(ValueError):
+            self.tester._plugincoupling = 'foo'
+            self.tester.push_file_to_central(fp)
 
-    #     # change transfer mode to https
-    #     self.tester._plugincoupling = 'https'
-    #     fp_source = 'foo.bar'
-    #     with open(fp_source, 'w') as f:
-    #         f.write("this is a test\n")
-    #     self.clean_up_files.append(fp_source)
-    #     fp_obs = self.tester.push_file_to_central(fp_source)
-    #     self.assertEqual(fp_source, fp_obs)
+        # change transfer mode to https
+        self.tester._plugincoupling = 'https'
+        fp_source = 'foo.bar'
+        with open(fp_source, 'w') as f:
+            f.write("this is a test\n")
+        self.clean_up_files.append(fp_source)
+        fp_obs = self.tester.push_file_to_central(fp_source)
+        self.assertEqual(fp_source, fp_obs)
 
 
 if __name__ == '__main__':
