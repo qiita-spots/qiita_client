@@ -52,8 +52,9 @@ jobs:
 
           # we need to download qiita directly so we have "easy" access to
           # all config files
-          wget https://github.com/biocore/qiita/archive/dev.zip
-          unzip dev.zip
+          # wget https://github.com/biocore/qiita/archive/dev.zip
+          # unzip dev.zip
+          git clone -b uncouplePlugins https://github.com/jlab/qiita.git
 
           # pull out the port so we can modify the configuration file easily
           pgport=${{ job.services.postgres.ports[5432] }}
