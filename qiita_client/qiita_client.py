@@ -841,9 +841,14 @@ class QiitaClient(object):
         elif self._plugincoupling == 'https':
             logger.debug('Submitting file %s to qiita server.' % filepath)
 
+            # target path, i.e. without filename
+            dirpath = os.path.dirname(filepath)
+            if dirpath == "":
+                dirpath = "/"
+
             self.post(
                 '/cloud/push_file_to_central/',
-                files={os.path.dirname(filepath): open(filepath, 'rb')})
+                files={dirpath: open(filepath, 'rb')})
 
             return filepath
 
