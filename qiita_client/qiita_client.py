@@ -790,6 +790,10 @@ class QiitaClient(object):
             return target_filepath
 
         elif self._plugincoupling == 'https':
+            # strip off root
+            if filepath.startswith(os.path.abspath(os.sep)):
+                filepath = filepath[len(os.path.abspath(os.sep)):]
+
             logger.debug('Requesting file %s from qiita server.' % filepath)
 
             # actual call to Qiita central to obtain file content

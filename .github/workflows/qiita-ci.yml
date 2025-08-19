@@ -106,7 +106,7 @@ jobs:
           export NGINX_FILE=`pwd`/qiita-dev/qiita_pet/nginx_example.conf
           export NGINX_FILE_NEW=`pwd`/qiita-dev/qiita_pet/nginx_example_local.conf
           sed "s#/home/runner/work/qiita/qiita#${PWD}/qiita-dev#g" ${NGINX_FILE} > ${NGINX_FILE_NEW}
-          sed -i "s#/Users/username/qiita#${PWD}/qiita-dev/#g" ${NGINX_FILE_NEW}
+          sed -i "s#/Users/username/qiita#${PWD}/qiita-dev#g" ${NGINX_FILE_NEW}
           nginx -c ${NGINX_FILE_NEW}
 
           echo "3. Setting up qiita"
