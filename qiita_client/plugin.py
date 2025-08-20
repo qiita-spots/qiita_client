@@ -185,7 +185,7 @@ class BaseQiitaPlugin(object):
         self.conf_fp = join(conf_dir, "%s_%s.conf" % (self.name, self.version))
 
     def generate_config(self, env_script, start_script, server_cert=None,
-                        plugin_couling=_ALLOWED_PLUGIN_COUPLINGS[0]):
+                        plugin_coupling=_ALLOWED_PLUGIN_COUPLINGS[0]):
         """Generates the plugin configuration file
 
         Parameters
@@ -216,7 +216,7 @@ class BaseQiitaPlugin(object):
                                      env_script, start_script,
                                      self._plugin_type, self.publications,
                                      server_cert, client_id, client_secret,
-                                     plugin_couling))
+                                     plugin_coupling))
 
     def _register_command(self, command):
         """Registers a command in the plugin
