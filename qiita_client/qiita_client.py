@@ -221,6 +221,7 @@ class QiitaClient(object):
         self._token = None
         self._fetch_token()
 
+        # store protocol for plugin coupling
         self._plugincoupling = plugincoupling
 
     def _fetch_token(self):

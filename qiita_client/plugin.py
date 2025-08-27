@@ -282,6 +282,24 @@ class BaseQiitaPlugin(object):
         with open(self.conf_fp, 'U') as conf_file:
             config.readfp(conf_file)
 
+        # the plugin coupling protocoll can be set in three ways
+        # 1. default is always "filesystem", i.e. first value in
+        #    _ALLOWED_PLUGIN_COUPLINGS. This is to be downward compatible.
+        # 2. the plugin configuration can hold a section 'network' with an
+        #    option 'PLUGINCOUPLING'. For old config files, this might not
+        #    (yet) be the case. Therefore, we are double checking existance
+        #    of this section and parameter here.
+        # 3. you can set the environment variable QIITA_PLUGINCOUPLING
+        # Precedence is 3, 2, 1, i.e. the environment variable overrides the
+        # other two ways.
+        plugincoupling = self._ALLOWED_PLUGIN_COUPLINGS[0]
+        if config.has_section('network') and \
+           config.has_option('network', 'PLUGINCOUPLING'):
+            plugincoupling = config.get('network', 'PLUGINCOUPLING')
+        if 'QIITA_PLUGINCOUPLING' in environ.keys() and \
+           environ['QIITA_PLUGINCOUPLING'] is not None:
+            plugincoupling = environ['QIITA_PLUGINCOUPLING']
+
         qclient = QiitaClient(server_url, config.get('oauth2', 'CLIENT_ID'),
                               config.get('oauth2', 'CLIENT_SECRET'),
                               # for this group of tests, confirm optional
@@ -290,8 +308,7 @@ class BaseQiitaPlugin(object):
                               # from validating the server's cert using
                               # certifi's pem cache.
                               ca_cert=config.get('oauth2', 'SERVER_CERT'),
-                              plugincoupling=config.get('network',
-                                                        'PLUGINCOUPLING'))
+                              plugincoupling=plugincoupling)
 
         if job_id == 'register':
             self._register(qclient)
