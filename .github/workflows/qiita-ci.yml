@@ -52,9 +52,8 @@ jobs:
 
           # we need to download qiita directly so we have "easy" access to
           # all config files
-          # wget https://github.com/biocore/qiita/archive/dev.zip
-          # unzip dev.zip
-          git clone -b uncouplePlugins https://github.com/jlab/qiita.git qiita-dev
+          wget https://github.com/biocore/qiita/archive/dev.zip
+          unzip dev.zip
 
           # pull out the port so we can modify the configuration file easily
           pgport=${{ job.services.postgres.ports[5432] }}
@@ -95,7 +94,6 @@ jobs:
           export QIITA_ROOTCA_CERT=`pwd`/qiita-dev/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita-dev/qiita_core/support_files/config_test_local.cfg
           sed "s#/home/runner/work/qiita/qiita#${PWD}/qiita-dev#g" `pwd`/qiita-dev/qiita_core/support_files/config_test.cfg > ${QIITA_CONFIG_FP}
-          sed -i "s/ENABLE_HTTPS_PLUGIN_FILETRANSFER = False/ENABLE_HTTPS_PLUGIN_FILETRANSFER = True/" ${QIITA_CONFIG_FP}
 
           export REDBIOM_HOST="http://localhost:7379"
 
