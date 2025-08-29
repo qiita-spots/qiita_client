@@ -744,7 +744,7 @@ class QiitaClient(object):
 
         return sample_names, prep_info
 
-    def fetch_file_from_central(self, filepath, prefix=''):
+    def fetch_file_from_central(self, filepath, prefix=None):
         """Moves content of a file from Qiita's central BASE_DATA_DIR to a
            local plugin file-system.
 
@@ -764,7 +764,7 @@ class QiitaClient(object):
             Primarily for testing: prefix the target filepath with this
             filepath prefix to
             a) in 'filesystem' mode: create an actual file copy (for testing)
-               If prefix='', nothing will be copied/moved
+               If prefix=None, nothing will be copied/moved
             b) in 'https' mode: flexibility to locate files differently in
                plugin local file system.
 
@@ -773,7 +773,7 @@ class QiitaClient(object):
         str : the filepath of the requested file within the local file system
         """
         target_filepath = filepath
-        if prefix != '':
+        if (prefix is not None) and (prefix != ""):
             # strip off root
             if filepath.startswith(os.path.abspath(os.sep)):
                 target_filepath = target_filepath[

@@ -136,11 +136,11 @@ class QiitaArtifactType(object):
 
 
 class BaseQiitaPlugin(object):
-    # default must be first element
-    _ALLOWED_PLUGIN_COUPLINGS = ['filesystem', 'https']
+    _DEFAULT_PLUGIN_COUPLINGS = 'filesystem'
+    _ALLOWED_PLUGIN_COUPLINGS = [_DEFAULT_PLUGIN_COUPLINGS, 'https']
 
     def __init__(self, name, version, description, publications=None,
-                 plugincoupling=_ALLOWED_PLUGIN_COUPLINGS[0]):
+                 plugincoupling=_DEFAULT_PLUGIN_COUPLINGS):
         logger.debug('Entered BaseQiitaPlugin.__init__()')
         self.name = name
         self.version = version
@@ -185,7 +185,7 @@ class BaseQiitaPlugin(object):
         self.conf_fp = join(conf_dir, "%s_%s.conf" % (self.name, self.version))
 
     def generate_config(self, env_script, start_script, server_cert=None,
-                        plugin_coupling=_ALLOWED_PLUGIN_COUPLINGS[0]):
+                        plugin_coupling=_DEFAULT_PLUGIN_COUPLINGS):
         """Generates the plugin configuration file
 
         Parameters
@@ -201,7 +201,7 @@ class BaseQiitaPlugin(object):
             HTTPS to it
         plugin_coupling : str
             Type of coupling of plugin to central for file exchange.
-            Valid values are 'filesystem' and 'https'.
+            Valid values: see _ALLOWED_PLUGIN_COUPLINGS.
         """
         logger.debug('Entered BaseQiitaPlugin.generate_config()')
         sr = SystemRandom()
@@ -283,8 +283,8 @@ class BaseQiitaPlugin(object):
             config.readfp(conf_file)
 
         # the plugin coupling protocoll can be set in three ways
-        # 1. default is always "filesystem", i.e. first value in
-        #    _ALLOWED_PLUGIN_COUPLINGS. This is to be downward compatible.
+        # 1. default is always "filesystem", i.e. _DEFAULT_PLUGIN_COUPLINGS
+        #    This is to be downward compatible.
         # 2. the plugin configuration can hold a section 'network' with an
         #    option 'PLUGINCOUPLING'. For old config files, this might not
         #    (yet) be the case. Therefore, we are double checking existance
@@ -292,7 +292,7 @@ class BaseQiitaPlugin(object):
         # 3. you can set the environment variable QIITA_PLUGINCOUPLING
         # Precedence is 3, 2, 1, i.e. the environment variable overrides the
         # other two ways.
-        plugincoupling = self._ALLOWED_PLUGIN_COUPLINGS[0]
+        plugincoupling = self._DEFAULT_PLUGIN_COUPLINGS
         if config.has_section('network') and \
            config.has_option('network', 'PLUGINCOUPLING'):
             plugincoupling = config.get('network', 'PLUGINCOUPLING')
@@ -372,7 +372,7 @@ class QiitaTypePlugin(BaseQiitaPlugin):
 
     def __init__(self, name, version, description, validate_func,
                  html_generator_func, artifact_types, publications=None,
-                 plugincoupling=BaseQiitaPlugin._ALLOWED_PLUGIN_COUPLINGS[0]):
+                 plugincoupling=BaseQiitaPlugin._DEFAULT_PLUGIN_COUPLINGS):
         super(QiitaTypePlugin, self).__init__(name, version, description,
                                               publications=publications,
                                               plugincoupling=plugincoupling)
