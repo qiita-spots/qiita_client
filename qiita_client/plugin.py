@@ -136,12 +136,45 @@ class QiitaArtifactType(object):
 
 
 class BaseQiitaPlugin(object):
-    def __init__(self, name, version, description, publications=None):
+    _DEFAULT_PLUGIN_COUPLINGS = 'filesystem'
+    _ALLOWED_PLUGIN_COUPLINGS = [_DEFAULT_PLUGIN_COUPLINGS, 'https']
+
+    def __init__(self, name, version, description, publications=None,
+                 plugincoupling=_DEFAULT_PLUGIN_COUPLINGS):
         logger.debug('Entered BaseQiitaPlugin.__init__()')
         self.name = name
         self.version = version
         self.description = description
         self.publications = dumps(publications) if publications else ""
+
+        # Depending on your compute architecture, there are multiple options
+        # available how "thight" plugins are coupled to the central
+        # Qiita master/workers
+        # --- filesystem ---
+        # The default scenario is "filesystem", i.e. plugins as well as
+        # master/worker have unrestricted direct access to a shared filesystem,
+        # e.g. a larger volume / directory, defined in the server configuration
+        # as base_data_dir
+        # --- https ---
+        # A second scenario is that your plugins execute as independent jobs on
+        # another machine, e.g. as docker containers or other cloud techniques.
+        # Intentionally, you don't want to use a shared filesystem, but you
+        # have to make sure necessary input files are provided to the
+        # containerized plugin before execution and resulting files are
+        # transfered back to the central Qiita master/worker. In this case,
+        # files are pulled / pushed through functions
+        # qiita_client.fetch_file_from_central and
+        # qiita_client.push_file_to_central, respectivey.
+        # Actually, all files need to be decorated with this function.
+        # The decision how data are transferred is then made within these two
+        # functions according to the "plugincoupling" setting.
+        if plugincoupling not in self._ALLOWED_PLUGIN_COUPLINGS:
+            raise ValueError(
+                ("valid plugincoupling values are ['%s'], but you "
+                 "provided %s") % (
+                     "', '".join(self._ALLOWED_PLUGIN_COUPLINGS),
+                     plugincoupling))
+        self.plugincoupling = plugincoupling
 
         # Will hold the different commands
         self.task_dict = {}
@@ -151,7 +184,8 @@ class BaseQiitaPlugin(object):
             'QIITA_PLUGINS_DIR', join(expanduser('~'), '.qiita_plugins'))
         self.conf_fp = join(conf_dir, "%s_%s.conf" % (self.name, self.version))
 
-    def generate_config(self, env_script, start_script, server_cert=None):
+    def generate_config(self, env_script, start_script, server_cert=None,
+                        plugin_coupling=_DEFAULT_PLUGIN_COUPLINGS):
         """Generates the plugin configuration file
 
         Parameters
@@ -165,6 +199,9 @@ class BaseQiitaPlugin(object):
             If the Qiita server used does not have a valid certificate, the
             path to the Qiita certificate so the plugin can connect over
             HTTPS to it
+        plugin_coupling : str
+            Type of coupling of plugin to central for file exchange.
+            Valid values: see _ALLOWED_PLUGIN_COUPLINGS.
         """
         logger.debug('Entered BaseQiitaPlugin.generate_config()')
         sr = SystemRandom()
@@ -178,7 +215,8 @@ class BaseQiitaPlugin(object):
             f.write(CONF_TEMPLATE % (self.name, self.version, self.description,
                                      env_script, start_script,
                                      self._plugin_type, self.publications,
-                                     server_cert, client_id, client_secret))
+                                     server_cert, client_id, client_secret,
+                                     plugin_coupling))
 
     def _register_command(self, command):
         """Registers a command in the plugin
@@ -188,8 +226,8 @@ class BaseQiitaPlugin(object):
         command: QiitaCommand
             The command to be added to the plugin
         """
-        logger.debug(
-            f'Entered BaseQiitaPlugin._register_command({command.name})')
+        logger.debug('Entered BaseQiitaPlugin._register_command(%s)' %
+                     command.name)
         self.task_dict[command.name] = command
 
     def _register(self, qclient):
@@ -244,6 +282,14 @@ class BaseQiitaPlugin(object):
         with open(self.conf_fp, 'U') as conf_file:
             config.readfp(conf_file)
 
+        plugincoupling = self._DEFAULT_PLUGIN_COUPLINGS
+        if config.has_section('network') and \
+           config.has_option('network', 'PLUGINCOUPLING'):
+            plugincoupling = config.get('network', 'PLUGINCOUPLING')
+        if 'QIITA_PLUGINCOUPLING' in environ.keys() and \
+           environ['QIITA_PLUGINCOUPLING'] is not None:
+            plugincoupling = environ['QIITA_PLUGINCOUPLING']
+
         qclient = QiitaClient(server_url, config.get('oauth2', 'CLIENT_ID'),
                               config.get('oauth2', 'CLIENT_SECRET'),
                               # for this group of tests, confirm optional
@@ -251,7 +297,8 @@ class BaseQiitaPlugin(object):
                               # this value will prevent underlying libraries
                               # from validating the server's cert using
                               # certifi's pem cache.
-                              ca_cert=config.get('oauth2', 'SERVER_CERT'))
+                              ca_cert=config.get('oauth2', 'SERVER_CERT'),
+                              plugincoupling=plugincoupling)
 
         if job_id == 'register':
             self._register(qclient)
@@ -314,9 +361,11 @@ class QiitaTypePlugin(BaseQiitaPlugin):
     _plugin_type = "artifact definition"
 
     def __init__(self, name, version, description, validate_func,
-                 html_generator_func, artifact_types, publications=None):
+                 html_generator_func, artifact_types, publications=None,
+                 plugincoupling=BaseQiitaPlugin._DEFAULT_PLUGIN_COUPLINGS):
         super(QiitaTypePlugin, self).__init__(name, version, description,
-                                              publications=publications)
+                                              publications=publications,
+                                              plugincoupling=plugincoupling)
 
         logger.debug('Entered QiitaTypePlugin.__init__()')
         self.artifact_types = artifact_types
@@ -382,4 +431,8 @@ PUBLICATIONS = %s
 [oauth2]
 SERVER_CERT = %s
 CLIENT_ID = %s
-CLIENT_SECRET = %s"""
+CLIENT_SECRET = %s
+
+[network]
+PLUGINCOUPLING = %s
+"""

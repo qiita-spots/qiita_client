@@ -150,9 +150,11 @@ class QiitaTypePluginTest(PluginTestCase):
                      'SERVER_CERT = \n']
         # We will test the last 2 lines independently since they're variable
         # in each test run
-        self.assertEqual(conf[:-2], exp_lines)
-        self.assertTrue(conf[-2].startswith('CLIENT_ID = '))
-        self.assertTrue(conf[-1].startswith('CLIENT_SECRET = '))
+        self.assertEqual(conf[:-5], exp_lines)
+        self.assertTrue(conf[-5].startswith('CLIENT_ID = '))
+        self.assertTrue(conf[-4].startswith('CLIENT_SECRET = '))
+        self.assertTrue(conf[-2].startswith('[network]'))
+        self.assertTrue(conf[-1].startswith('PLUGINCOUPLING = '))
 
     def test_call(self):
         def validate_func(a, b, c, d):

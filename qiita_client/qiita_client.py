@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import os
+import shutil
 import time
 import requests
 import threading
@@ -182,7 +184,8 @@ class QiitaClient(object):
     get
     post
     """
-    def __init__(self, server_url, client_id, client_secret, ca_cert=None):
+    def __init__(self, server_url, client_id, client_secret, ca_cert=None,
+                 plugincoupling='filesystem'):
         self._server_url = server_url
         self._session = requests.Session()
 
@@ -217,6 +220,9 @@ class QiitaClient(object):
         # Fetch the access token
         self._token = None
         self._fetch_token()
+
+        # store protocol for plugin coupling
+        self._plugincoupling = plugincoupling
 
     def _fetch_token(self):
         """Retrieves an access token from the Qiita server
@@ -253,13 +259,16 @@ class QiitaClient(object):
             # Timeout, etc. and logs them
             logger.debug(str(e))
 
-    def _request_oauth2(self, req, *args, **kwargs):
+    def _request_oauth2(self, req, rettype, *args, **kwargs):
         """Executes a request using OAuth2 authorization
 
         Parameters
         ----------
         req : function
             The request to execute
+        rettype : string
+            The return type of the function, either "json" or
+            if e.g. files are transferred "content"
         args : tuple
             The request args
         kwargs : dict
@@ -309,13 +318,16 @@ class QiitaClient(object):
                     r = req(*args, **kwargs)
         return r
 
-    def _request_retry(self, req, url, **kwargs):
+    def _request_retry(self, req, url, rettype='json', **kwargs):
         """Executes a request retrying it 2 times in case of failure
 
         Parameters
         ----------
         req : function
             The request to execute
+        rettype : string
+            The return type of the function, either "json" (default) or
+            if e.g. files are transferred "content"
         url : str
             The url to access in the server
         kwargs : dict
@@ -323,7 +335,7 @@ class QiitaClient(object):
 
         Returns
         -------
-        dict or None
+        dict or None or plain content IF rettype='content'
             The JSON information in the request response, if any
 
         Raises
@@ -358,7 +370,8 @@ class QiitaClient(object):
         retries = MAX_RETRIES
         while retries > 0:
             retries -= 1
-            r = self._request_oauth2(req, url, verify=self._verify, **kwargs)
+            r = self._request_oauth2(
+                req, rettype, url, verify=self._verify, **kwargs)
             r.close()
             # There are some error codes that the specification says that they
             # shouldn't be retried
@@ -374,7 +387,16 @@ class QiitaClient(object):
                     "Message: %s" % (req.__name__, url, r.status_code, r.text))
             elif 0 <= (r.status_code - 200) < 100:
                 try:
-                    return r.json()
+                    if rettype is None or rettype == 'json':
+                        return r.json()
+                    else:
+                        if rettype == 'content':
+                            return r.content
+                        else:
+                            raise ValueError(
+                                ("return type rettype='%s' cannot be "
+                                 "understand. Choose from 'json' (default) "
+                                 "or 'content!") % rettype)
                 except ValueError:
                     return None
             stime = randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
@@ -386,13 +408,16 @@ class QiitaClient(object):
             "Request '%s %s' did not succeed. Status code: %d. Message: %s"
             % (req.__name__, url, r.status_code, r.text))
 
-    def get(self, url, **kwargs):
+    def get(self, url, rettype='json', **kwargs):
         """Execute a get request against the Qiita server
 
         Parameters
         ----------
         url : str
             The url to access in the server
+        rettype : string
+            The return type of the function, either "json" (default) or
+            if e.g. files are transferred "content"
         kwargs : dict
             The request kwargs
 
@@ -402,7 +427,8 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.get()')
-        return self._request_retry(self._session.get, url, **kwargs)
+        return self._request_retry(
+            self._session.get, url, rettype=rettype, **kwargs)
 
     def post(self, url, **kwargs):
         """Execute a post request against the Qiita server
@@ -420,7 +446,8 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.post(%s)' % url)
-        return self._request_retry(self._session.post, url, **kwargs)
+        return self._request_retry(
+            self._session.post, url, rettype='json', **kwargs)
 
     def patch(self, url, op, path, value=None, from_p=None, **kwargs):
         """Executes a JSON patch request against the Qiita server
@@ -479,7 +506,8 @@ class QiitaClient(object):
         # we made sure that data is correctly formatted here
         kwargs['data'] = data
 
-        return self._request_retry(self._session.patch, url, **kwargs)
+        return self._request_retry(
+            self._session.patch, url, rettype='json', **kwargs)
 
     # The functions are shortcuts for common functionality that all plugins
     # need to implement.
@@ -502,7 +530,8 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.http_patch()')
-        return self._request_retry(self._session.patch, url, **kwargs)
+        return self._request_retry(
+            self._session.patch, url, rettype='json', **kwargs)
 
     def start_heartbeat(self, job_id):
         """Create and start a thread that would send heartbeats to the server
@@ -714,3 +743,116 @@ class QiitaClient(object):
         prep_info = prep_info.filter(items=sample_names.keys(), axis=0)
 
         return sample_names, prep_info
+
+    def fetch_file_from_central(self, filepath, prefix=None):
+        """Moves content of a file from Qiita's central BASE_DATA_DIR to a
+           local plugin file-system.
+
+           By default, this is exactly the same location, i.e. the return
+           filepath is identical to the requested one and nothing is moved /
+           copied.
+           However, for less tight plugin couplings, file content can be
+           transferred via https for situations where the plugin does not have
+           native access to Qiita's overall BASE_DATA_DIR.
+
+        Parameters
+        ----------
+        filepath : str
+            The filepath in Qiita's central BASE_DATA_DIR to the requested
+            file content
+        prefix : str
+            Primarily for testing: prefix the target filepath with this
+            filepath prefix to
+            a) in 'filesystem' mode: create an actual file copy (for testing)
+               If prefix=None, nothing will be copied/moved
+            b) in 'https' mode: flexibility to locate files differently in
+               plugin local file system.
+
+        Returns
+        -------
+        str : the filepath of the requested file within the local file system
+        """
+        target_filepath = filepath
+        if (prefix is not None) and (prefix != ""):
+            # strip off root
+            if filepath.startswith(os.path.abspath(os.sep)):
+                target_filepath = target_filepath[
+                    len(os.path.abspath(os.sep)):]
+            # prefix filepath with given prefix
+            target_filepath = os.path.join(prefix, target_filepath)
+
+        if self._plugincoupling == 'filesystem':
+            if (prefix is not None) and (prefix != ""):
+                # create necessary directory locally
+                os.makedirs(os.path.dirname(target_filepath), exist_ok=True)
+
+                shutil.copyfile(filepath, target_filepath)
+
+            return target_filepath
+
+        elif self._plugincoupling == 'https':
+            # strip off root
+            if filepath.startswith(os.path.abspath(os.sep)):
+                filepath = filepath[len(os.path.abspath(os.sep)):]
+
+            logger.debug('Requesting file %s from qiita server.' % filepath)
+
+            # actual call to Qiita central to obtain file content
+            content = self.get(
+                '/cloud/fetch_file_from_central/' + filepath,
+                rettype='content')
+
+            # create necessary directory locally
+            os.makedirs(os.path.dirname(target_filepath), exist_ok=True)
+
+            # write retrieved file content
+            with open(target_filepath, 'wb') as f:
+                f.write(content)
+
+            return target_filepath
+
+        else:
+            raise ValueError(
+                ("File communication protocol '%s' as defined in plugins "
+                 "configuration is NOT defined.") % self._plugincoupling)
+
+    def push_file_to_central(self, filepath):
+        """Pushs filecontent to Qiita's central BASE_DATA_DIR directory.
+
+        By default, plugin and Qiita's central BASE_DATA_DIR filesystems are
+        identical. In this case, no files are touched and the filepath is
+        directly returned.
+        If however, plugincoupling is set to 'https', the content of the file
+        is sent via https POST to Qiita's master/worker, which has to receive
+        and store in an appropriate location.
+
+        Parameters
+        ----------
+        filepath : str
+            The filepath of the files whos content shall be send to Qiita's
+            central BASE_DATA_DIR
+
+        Returns
+        -------
+        The given filepath - to be transparent in plugin code.
+        """
+        if self._plugincoupling == 'filesystem':
+            return filepath
+
+        elif self._plugincoupling == 'https':
+            logger.debug('Submitting file %s to qiita server.' % filepath)
+
+            # target path, i.e. without filename
+            dirpath = os.path.dirname(filepath)
+            if dirpath == "":
+                dirpath = "/"
+
+            self.post(
+                '/cloud/push_file_to_central/',
+                files={dirpath: open(filepath, 'rb')})
+
+            return filepath
+
+        raise ValueError(
+            ("File communication protocol '%s' as defined in plugins "
+             "configuration is NOT defined.") % self._plugincoupling)

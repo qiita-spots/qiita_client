@@ -7,8 +7,9 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+import filecmp
 from os import remove, close
-from os.path import basename, exists
+from os.path import basename, exists, expanduser, join
 from tempfile import mkstemp
 from json import dumps
 import pandas as pd
@@ -384,6 +385,60 @@ class QiitaClientTests(PluginTestCase):
         del fexp['sample.1']
         self.assertEqual(fobs, fexp)
         self.assertEqual(piobs.shape, (2, 1))
+
+    def test_fetch_file_from_central(self):
+        self.tester._plugincoupling = 'filesystem'
+
+        ainfo = self.tester.get("/qiita_db/artifacts/%s/" % 1)
+        fp = ainfo['files']['raw_forward_seqs'][0]['filepath']
+
+        # mode: filesystem, prefix='': no copy, directly return given fp
+        fp_obs = self.tester.fetch_file_from_central(fp)
+        self.assertEqual(fp, fp_obs)
+
+        # mode: filesystem, prefix='/karl': make file copy
+        prefix = join(expanduser("~"), 'karl')
+        self.clean_up_files.append(prefix + fp)
+        fp_obs = self.tester.fetch_file_from_central(fp, prefix=prefix)
+        self.assertEqual(prefix + fp, fp_obs)
+        self.assertTrue(filecmp.cmp(fp, fp_obs, shallow=False))
+
+        # non existing mode
+        with self.assertRaises(ValueError):
+            self.tester._plugincoupling = 'foo'
+            self.tester.fetch_file_from_central(fp)
+
+        # change transfer mode to https
+        self.tester._plugincoupling = 'https'
+        prefix = join(expanduser("~"), 'kurt')
+        self.clean_up_files.append(prefix + fp)
+        fp_obs = self.tester.fetch_file_from_central(fp, prefix=prefix)
+        self.assertEqual(prefix + fp, fp_obs)
+        self.assertTrue(filecmp.cmp(fp, fp_obs, shallow=False))
+
+    def test_push_file_to_central(self):
+        self.tester._plugincoupling = 'filesystem'
+
+        ainfo = self.tester.get("/qiita_db/artifacts/%s/" % 1)
+        fp = ainfo['files']['raw_forward_seqs'][0]['filepath']
+
+        # mode: filesystem
+        fp_obs = self.tester.push_file_to_central(fp)
+        self.assertEqual(fp, fp_obs)
+
+        # non existing mode
+        with self.assertRaises(ValueError):
+            self.tester._plugincoupling = 'foo'
+            self.tester.push_file_to_central(fp)
+
+        # change transfer mode to https
+        self.tester._plugincoupling = 'https'
+        fp_source = 'foo.bar'
+        with open(fp_source, 'w') as f:
+            f.write("this is a test\n")
+        self.clean_up_files.append(fp_source)
+        fp_obs = self.tester.push_file_to_central(fp_source)
+        self.assertEqual(fp_source, fp_obs)
 
 
 if __name__ == '__main__':
