@@ -773,7 +773,7 @@ class QiitaClient(object):
         str : the filepath of the requested file within the local file system
         """
         target_filepath = filepath
-        if (prefix is not None) and (prefix != ""):
+        if not prefix:
             # strip off root
             if filepath.startswith(os.path.abspath(os.sep)):
                 target_filepath = target_filepath[
@@ -782,7 +782,7 @@ class QiitaClient(object):
             target_filepath = os.path.join(prefix, target_filepath)
 
         if self._plugincoupling == 'filesystem':
-            if prefix != '':
+            if not prefix:
                 # create necessary directory locally
                 os.makedirs(os.path.dirname(target_filepath), exist_ok=True)
 
