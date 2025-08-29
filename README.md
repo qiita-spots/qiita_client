@@ -36,12 +36,12 @@ cloud environments, default is **filesystem**.
 
 The plugin coupling protocoll can be set in three ways
 
-    1. default is always "filesystem", i.e. _DEFAULT_PLUGIN_COUPLINGS
-        This is to be downward compatible.
-    2. the plugin configuration can hold a section 'network' with an
-        option 'PLUGINCOUPLING'. For old config files, this might not
-        (yet) be the case. Therefore, we are double checking existance
-        of this section and parameter here.
-    3. you can set the environment variable QIITA_PLUGINCOUPLING
-        Precedence is 3, 2, 1, i.e. the environment variable overrides the
-        other two ways.
+1. default is always `filesystem`, i.e. `_DEFAULT_PLUGIN_COUPLINGS`
+   This is to be downward compatible.
+2. the plugin configuration can hold a section `network` with an
+   option `PLUGINCOUPLING`. For old config files, this might not
+   (yet) be the case. Therefore, we are double checking existance
+   of this section and parameter here.
+3. you can set the environment variable `QIITA_PLUGINCOUPLING`
+   Precedence is 3, 2, 1, i.e. the environment variable overrides
+   the other two ways.
