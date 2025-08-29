@@ -279,7 +279,7 @@ class BaseQiitaPlugin(object):
         logger.debug('Entered BaseQiitaPlugin.__call__()')
         # Set up the Qiita Client
         config = ConfigParser()
-        with open(self.conf_fp, 'U') as conf_file:
+        with open(self.conf_fp, 'r') as conf_file:
             config.readfp(conf_file)
 
         plugincoupling = self._DEFAULT_PLUGIN_COUPLINGS
