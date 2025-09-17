@@ -784,7 +784,8 @@ class QiitaClient(object):
         if self._plugincoupling == 'filesystem':
             if (prefix is not None) and (prefix != ""):
                 # create necessary directory locally
-                os.makedirs(os.path.dirname(target_filepath), exist_ok=True)
+                if not os.path.exists(os.path.dirname(target_filepath)):
+                    os.makedirs(os.path.dirname(target_filepath))
 
                 shutil.copyfile(filepath, target_filepath)
 
@@ -803,7 +804,8 @@ class QiitaClient(object):
                 rettype='content')
 
             # create necessary directory locally
-            os.makedirs(os.path.dirname(target_filepath), exist_ok=True)
+            if not os.path.exists(os.path.dirname(target_filepath)):
+                os.makedirs(os.path.dirname(target_filepath))
 
             # write retrieved file content
             with open(target_filepath, 'wb') as f:
