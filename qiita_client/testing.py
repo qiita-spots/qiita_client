@@ -11,6 +11,7 @@ from os import environ
 from time import sleep
 
 from qiita_client import QiitaClient
+from plugin import BaseQiitaPlugin
 
 import logging
 
@@ -36,6 +37,14 @@ class PluginTestCase(TestCase):
         logger.debug(
             'PluginTestCase.setUpClass() token %s' % cls.qclient._token)
         cls.qclient.post('/apitest/reload_plugins/')
+
+        # When testing, we access plugin functions often directly. Plugin
+        # configuration files are not parsed in these cases. To be able to
+        # change the plugin coupling protocol, we resort to the environment
+        # variable here.
+        cls.qclient._plugincoupling = environ.get(
+            'QIITA_PLUGINCOUPLING', BaseQiitaPlugin._DEFAULT_PLUGIN_COUPLINGS)
+
         # Give enough time for the plugins to register
         sleep(5)
 
