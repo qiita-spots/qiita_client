@@ -11,7 +11,7 @@ from os import environ
 from time import sleep
 
 from qiita_client import QiitaClient
-from qiita_client.plugin import BaseQiitaPlugin
+from .plugin import BaseQiitaPlugin
 
 import logging
 
