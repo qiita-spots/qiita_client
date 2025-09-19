@@ -14,6 +14,7 @@ import threading
 import pandas as pd
 from json import dumps
 from random import randint
+import fnmatch
 
 try:
     from itertools import zip_longest
@@ -842,16 +843,29 @@ class QiitaClient(object):
             return filepath
 
         elif self._plugincoupling == 'https':
-            logger.debug('Submitting file %s to qiita server.' % filepath)
+            logger.debug('Submitting %s %s to qiita server.' % (
+                'directory' if os.path.isdir(filepath) else 'file', filepath))
 
             # target path, i.e. without filename
             dirpath = os.path.dirname(filepath)
             if dirpath == "":
                 dirpath = "/"
 
-            self.post(
-                '/cloud/push_file_to_central/',
-                files={dirpath: open(filepath, 'rb')})
+            if os.path.isdir(filepath):
+                # Pushing all files of a directory, not only a single file.
+                # Cannot use "glob" as it lacks the "recursive" parameter in
+                # py27. This is used e.g. in qp-target-gene
+                for root, dirnames, filenames in os.walk(filepath):
+                    for filename in fnmatch.filter(filenames, "*"):
+                        fp = os.path.join(root, filename)
+                        self.post('/cloud/push_file_to_central/',
+                                  files={os.path.join(
+                                      dirpath,
+                                      os.path.dirname(fp)): open(fp, 'rb')})
+            else:
+                self.post(
+                    '/cloud/push_file_to_central/',
+                    files={dirpath: open(filepath, 'rb')})
 
             return filepath
 
