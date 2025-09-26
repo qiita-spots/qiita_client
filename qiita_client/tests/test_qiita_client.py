@@ -504,7 +504,7 @@ class QiitaClientTests(PluginTestCase):
             self.clean_up_files.append(fp_test)
             try:
                 self.qclient.push_file_to_central(fp_test)
-            except ForbiddenError as e:
+            except ForbiddenError:
                 # previous test instances might not have cleaned this file
                 # properly if ran with https protocol
                 pass
