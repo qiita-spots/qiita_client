@@ -502,12 +502,7 @@ class QiitaClientTests(PluginTestCase):
             with open(fp_test, 'w') as f:
                 f.write('This is a testfile content\n')
             self.clean_up_files.append(fp_test)
-            try:
-                self.qclient.push_file_to_central(fp_test)
-            except ForbiddenError:
-                # previous test instances might not have cleaned this file
-                # properly if ran with https protocol
-                pass
+            self.qclient.push_file_to_central(fp_test)
 
             # sanity check that test file has been deposited correctly
             fp_obs = self.qclient.fetch_file_from_central(fp_test)
@@ -529,6 +524,12 @@ class QiitaClientTests(PluginTestCase):
                 self.assertTrue(exists(fp_obs))
                 # qiita main filepath, returned by delete_file_from_central
                 self.assertTrue(exists(fp_deleted))
+
+                # clean up test file directly after tests have passed
+                if exists(fp_test):
+                    remove(fp_test)
+                if exists(fp_obs):
+                    remove(fp_obs)
 
 
 if __name__ == '__main__':
