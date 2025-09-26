@@ -18,7 +18,7 @@ from shutil import rmtree
 from qiita_client.qiita_client import (QiitaClient, _format_payload,
                                        ArtifactInfo)
 from qiita_client.testing import PluginTestCase, URL
-from qiita_client.exceptions import BadRequestError
+from qiita_client.exceptions import BadRequestError, ForbiddenError
 
 CLIENT_ID = '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4'
 BAD_CLIENT_ID = 'NOT_A_CLIENT_ID'
@@ -497,12 +497,17 @@ class QiitaClientTests(PluginTestCase):
             self.qclient._plugincoupling = protocol
 
             # deposit a test file
-            fp_test = join(cwd, 'deletme_%s.txt' % protocol)
+            fp_test = join(cwd, 'deleteme_%s.txt' % protocol)
             makedirs(cwd, exist_ok=True)
             with open(fp_test, 'w') as f:
                 f.write('This is a testfile content\n')
             self.clean_up_files.append(fp_test)
-            self.qclient.push_file_to_central(fp_test)
+            try:
+                self.qclient.push_file_to_central(fp_test)
+            except ForbiddenError as e:
+                # previous test instances might not have cleaned this file
+                # properly if ran with https protocol
+                pass
 
             # sanity check that test file has been deposited correctly
             fp_obs = self.qclient.fetch_file_from_central(fp_test)
