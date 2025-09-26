@@ -18,7 +18,7 @@ from shutil import rmtree
 from qiita_client.qiita_client import (QiitaClient, _format_payload,
                                        ArtifactInfo)
 from qiita_client.testing import PluginTestCase, URL
-from qiita_client.exceptions import BadRequestError, ForbiddenError
+from qiita_client.exceptions import BadRequestError
 
 CLIENT_ID = '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4'
 BAD_CLIENT_ID = 'NOT_A_CLIENT_ID'
