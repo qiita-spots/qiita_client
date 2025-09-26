@@ -820,20 +820,23 @@ class QiitaClient(object):
                  "configuration is NOT defined.") % self._plugincoupling)
 
     def push_file_to_central(self, filepath):
-        """Pushs filecontent to Qiita's central BASE_DATA_DIR directory.
+        """Pushs file- or directory content  to Qiita's central BASE_DATA_DIR
+           directory.
 
         By default, plugin and Qiita's central BASE_DATA_DIR filesystems are
         identical. In this case, no files are touched and the filepath is
         directly returned.
         If however, plugincoupling is set to 'https', the content of the file
-        is sent via https POST to Qiita's master/worker, which has to receive
-        and store in an appropriate location.
+        (or content of recursively all files in the given directory) is sent
+        via https POST to Qiita's master/worker, which has to receive and store
+        in an appropriate location.
 
         Parameters
         ----------
         filepath : str
-            The filepath of the files whos content shall be send to Qiita's
-            central BASE_DATA_DIR
+            The filepath of the file(s) whos content shall be send to Qiita's
+            central BASE_DATA_DIR.
+            Can be a path to a directory as well.
 
         Returns
         -------
@@ -872,3 +875,31 @@ class QiitaClient(object):
         raise ValueError(
             ("File communication protocol '%s' as defined in plugins "
              "configuration is NOT defined.") % self._plugincoupling)
+
+    def delete_file_from_central(self, filepath):
+        """Deletes a file in Qiita's central BASE_DATA_DIR directory.
+
+        I currently (2025-09-25) assess this operation to be too dangerous for
+        protocols other than "filesystem", i.e. on "https" the files are NOT
+        deleted.
+        However, this might change in the future and since I don't want to
+        touch every plugin's code again, I am adding this function here already
+        and use it in according plugin code locations, e.g. function _gzip_file
+        in qtp-sequencing.
+
+        Parameters
+        ----------
+        filepath : str
+            The filepath of the file that shall be deletes in Qiita's
+            central BASE_DATA_DIR
+
+        Returns
+        -------
+        The given filepath - to be transparent in plugin code.
+        """
+        if self._plugincoupling == 'filesystem':
+            os.remove(filepath)
+        elif self._plugincoupling == 'https':
+            pass
+
+        return filepath

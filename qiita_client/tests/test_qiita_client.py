@@ -9,7 +9,7 @@
 from unittest import TestCase, main
 import filecmp
 from os import remove, close, makedirs
-from os.path import basename, exists, expanduser, join, isdir
+from os.path import basename, exists, expanduser, join, isdir, dirname
 from tempfile import mkstemp
 from json import dumps
 import pandas as pd
@@ -487,6 +487,43 @@ class QiitaClientTests(PluginTestCase):
         self.assertEqual(fp_source, fp_obs)
         # As we don't necessarily know the QIITA_BASE_DIR, we cannot fetch one
         # of the files to double check for it's content
+
+    def test_delete_file_from_central(self):
+        # obtain current filepaths to infer QIITA_BASE_DIR
+        ainfo = self.tester.get("/qiita_db/artifacts/%s/" % 1)
+        cwd = dirname(ainfo['files']['raw_forward_seqs'][0]['filepath'])
+
+        for protocol in ['filesystem', 'https']:
+            self.qclient._plugincoupling = protocol
+
+            # deposit a test file
+            fp_test = join(cwd, 'deletme_%s.txt' % protocol)
+            makedirs(cwd, exist_ok=True)
+            with open(fp_test, 'w') as f:
+                f.write('This is a testfile content\n')
+            self.clean_up_files.append(fp_test)
+            self.qclient.push_file_to_central(fp_test)
+
+            # sanity check that test file has been deposited correctly
+            fp_obs = self.qclient.fetch_file_from_central(fp_test)
+            self.assertTrue(exists(fp_obs))
+
+            # delete file and test if it is gone
+            fp_deleted = self.qclient.delete_file_from_central(fp_test)
+            if protocol == 'filesystem':
+                # all three fp should point to the same filepath
+                self.assertFalse(exists(fp_obs))
+                self.assertFalse(exists(fp_test))
+                self.assertFalse(exists(fp_deleted))
+            elif protocol == 'https':
+                # as of 2025-09-26, I don't allow deletion of qiita main files
+                # through API endpoints. Thus, the file is NOT deleted!
+                # local version of the file
+                self.assertTrue(exists(fp_test))
+                # qiita main filepath
+                self.assertTrue(exists(fp_obs))
+                # qiita main filepath, returned by delete_file_from_central
+                self.assertTrue(exists(fp_deleted))
 
 
 if __name__ == '__main__':
