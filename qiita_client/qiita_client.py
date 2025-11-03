@@ -790,6 +790,10 @@ class QiitaClient(object):
 
                 shutil.copyfile(filepath, target_filepath)
 
+            logger.debug(
+                'Fetching file "%s" via protocol=%s from Qiita main.' % (
+                    filepath, self._plugincoupling))
+
             return target_filepath
 
         elif self._plugincoupling == 'https':
@@ -812,6 +816,10 @@ class QiitaClient(object):
             with open(target_filepath, 'wb') as f:
                 f.write(content)
 
+            logger.debug(
+                'Fetching file "%s" via protocol=%s from Qiita main.' % (
+                    filepath, self._plugincoupling))
+
             return target_filepath
 
         else:
@@ -820,7 +828,7 @@ class QiitaClient(object):
                  "configuration is NOT defined.") % self._plugincoupling)
 
     def push_file_to_central(self, filepath):
-        """Pushs file- or directory content  to Qiita's central BASE_DATA_DIR
+        """Pushs file- or directory content to Qiita's central BASE_DATA_DIR
            directory.
 
         By default, plugin and Qiita's central BASE_DATA_DIR filesystems are
