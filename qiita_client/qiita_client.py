@@ -774,6 +774,10 @@ class QiitaClient(object):
         str : the filepath of the requested file within the local file system
         """
         target_filepath = filepath
+        logger.debug(
+            'Fetching file "%s" via protocol=%s from Qiita main.' % (
+                filepath, self._plugincoupling))
+
         if (prefix is not None) and (prefix != ""):
             # strip off root
             if filepath.startswith(os.path.abspath(os.sep)):
@@ -790,18 +794,12 @@ class QiitaClient(object):
 
                 shutil.copyfile(filepath, target_filepath)
 
-            logger.debug(
-                'Fetching file "%s" via protocol=%s from Qiita main.' % (
-                    filepath, self._plugincoupling))
-
             return target_filepath
 
         elif self._plugincoupling == 'https':
             # strip off root
             if filepath.startswith(os.path.abspath(os.sep)):
                 filepath = filepath[len(os.path.abspath(os.sep)):]
-
-            logger.debug('Requesting file %s from qiita server.' % filepath)
 
             # actual call to Qiita central to obtain file content
             content = self.get(
@@ -815,10 +813,6 @@ class QiitaClient(object):
             # write retrieved file content
             with open(target_filepath, 'wb') as f:
                 f.write(content)
-
-            logger.debug(
-                'Fetching file "%s" via protocol=%s from Qiita main.' % (
-                    filepath, self._plugincoupling))
 
             return target_filepath
 
