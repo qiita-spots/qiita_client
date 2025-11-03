@@ -7,7 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase
-from os import environ
+from os import environ, sep
+from os.path import isabs, join, exists
 from time import sleep
 
 from qiita_client import QiitaClient
@@ -82,3 +83,30 @@ class PluginTestCase(TestCase):
                 break
 
         return status
+
+    def _fix_plugincoupling_filepath(self, fp, BASE_DATA_DIR="/qiita_data/"):
+        # In some plugin tests, example files are generated temporarily on
+        # local tmp directories. This is fine for plugincoupling == filesystem
+        # but will cause "File not found errors" when communication through
+        # other protocols as the file actually has never been pushed to Qiita
+        # main. This helper function shall fix this by copying the according
+        # files over to Qiita main WHEN not using "filesystem" and fix the
+        # according file paths, i.e. we need to prepend the BASE_DATA_DIR to
+        # the filename, which should be '/qiita_data/' e.g. here
+        # https://github.com/jlab/qiita-keycloak
+        if not exists(fp):
+            raise ValueError("Filepath does not exist!")
+
+        if self.qclient._plugincoupling == 'filesystem':
+            return fp
+        else:
+            processed_fp = fp
+            # chop off leading / for join to work properly when prepending
+            # the BASE_DATA_DIR
+            if isabs(processed_fp):
+                processed_fp = processed_fp[len(sep):]
+            processed_fp = join(BASE_DATA_DIR, processed_fp)
+            # ensure file is transferred to qiita main
+            self.qclient.push_file_to_central(fp)
+            # return the filepath prepended with qiita main base_data_dir
+            return processed_fp
