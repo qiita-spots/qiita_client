@@ -8,7 +8,7 @@
 
 from unittest import TestCase
 from os import environ, sep
-from os.path import join, relpath
+from os.path import join, isabs
 from time import sleep
 
 from qiita_client import QiitaClient
@@ -101,7 +101,18 @@ class PluginTestCase(TestCase):
         update_fp_only : bool
             Some tests operate on filepaths only - files do not actually need
             to exist. Thus, we don't need to tranfer a file.
+
+        Returns
+        -------
+        The potentially modified filepaths.
         """
+        def _stripRoot(fp):
+            # chop off leading / for join to work properly when prepending
+            # the BASE_DATA_DIR
+            if isabs(fp):
+                return fp[len(sep):]
+            return fp
+
         if self.qclient._plugincoupling == 'filesystem':
             return fps
 
@@ -117,13 +128,13 @@ class PluginTestCase(TestCase):
         if isinstance(fps, str):
             if not update_fp_only:
                 self.qclient.push_file_to_central(fps)
-            return join(base_data_dir, relpath(fps, sep))
+            return join(base_data_dir, _stripRoot(fps))
         elif isinstance(fps, list):
             for fp in fps:
                 if not update_fp_only:
                     self.qclient.push_file_to_central(fp)
-            return [join(base_data_dir, relpath(fp, sep)) for fp in fps]
+            return [join(base_data_dir, _stripRoot(fp)) for fp in fps]
         else:
             raise ValueError(
-                "_deposite_in_qiita_basedir is not implemented for type %s"
+                "deposite_in_qiita_basedir is not implemented for type %s"
                 % type(fps))
