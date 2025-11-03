@@ -87,8 +87,8 @@ class PluginTestCase(TestCase):
     def deposite_in_qiita_basedir(self, fps, update_fp_only=False):
         """Pushs a file to qiita main AND adapts given filepath accordingly.
 
-        A helper function to fix file paths in tests such that they point to the
-        expected BASE_DATA_DIR. This becomes necessary when uncoupling the
+        A helper function to fix file paths in tests such that they point to
+        the expected BASE_DATA_DIR. This becomes necessary when uncoupling the
         plugin filesystem as some methods now actually fetches expected files
         from BASE_DATA_DIR. This will fail for protocols other than filesystem
         IF files are created locally by the plugin test.
@@ -99,8 +99,8 @@ class PluginTestCase(TestCase):
             Filepath or list of filepaths to file(s) that shall be part of
             BASE_DATA_DIR, but currently points to some tmp file for testing.
         update_fp_only : bool
-            Some tests operate on filepaths only - files do not actually need to
-            exist. Thus, we don't need to tranfer a file.
+            Some tests operate on filepaths only - files do not actually need
+            to exist. Thus, we don't need to tranfer a file.
         """
         if self.qclient._plugincoupling == 'filesystem':
             return fps
