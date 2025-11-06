@@ -546,6 +546,10 @@ class QiitaClientTests(PluginTestCase):
         with open(join(fp_obs, 'source', 'testdir', 'fileA.txt'), 'r') as f:
             self.assertIn('contentA', '\n'.join(f.readlines()))
 
+        import sys
+        print(">>>>>>>>>>>>", fp_test, fp_main, fp_obs, file=sys.stderr)
+        print(">>>>>>>>>>>>", fp_test, fp_main, fp_obs)
+
 
 if __name__ == '__main__':
     main()
