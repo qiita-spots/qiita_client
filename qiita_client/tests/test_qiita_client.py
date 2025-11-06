@@ -529,7 +529,7 @@ class QiitaClientTests(PluginTestCase):
 
     def test_fetch_directory(self):
         # creating a test directory
-        fp_test = join('/job', '2_test_folder', 'source')
+        fp_test = join('./job', '2_test_folder', 'source')
         self._create_test_dir(prefix=fp_test)
 
         # transmitting test directory into qiita main
