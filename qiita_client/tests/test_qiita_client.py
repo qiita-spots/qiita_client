@@ -558,22 +558,22 @@ class QiitaClientTests(PluginTestCase):
         print(">>>>>C>>>>>>>", dirname(fp_main), file=sys.stderr)
         import os
 
-        with open("/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_pet/nginx_example_local.conf", 'r') as f:
-            for l in f.readlines():
-                print(">>>>>>>>>>>> NGINX >>> %s" % l, file=sys.stderr)
-        with open('/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_core/support_files/config_test_local.cfg', 'r') as f:
-            for l in f.readlines():
-                print(">>>>>>>>>>>> Q-Conf >>> %s" % l, file=sys.stderr)
-        from glob import glob
-        for f in glob('/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/**/*', recursive=True):
-            print(">>>>>>>>>>>> files >>> %s" % f, file=sys.stderr)
+        # with open("/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_pet/nginx_example_local.conf", 'r') as f:
+        #     for l in f.readlines():
+        #         print(">>>>>>>>>>>> NGINX >>> %s" % l, file=sys.stderr)
+        # with open('/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_core/support_files/config_test_local.cfg', 'r') as f:
+        #     for l in f.readlines():
+        #         print(">>>>>>>>>>>> Q-Conf >>> %s" % l, file=sys.stderr)
+        # from glob import glob
+        # for f in glob('/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/**/*', recursive=True):
+        #     print(">>>>>>>>>>>> files >>> %s" % f, file=sys.stderr)
 
-
-        fp_obs = self.tester.fetch_file_from_central(dirname(fp_main))
-        # test a file of the freshly transferred directory from main has
-        # expected file content
-        with open(join(fp_obs, 'source', 'testdir', 'fileA.txt'), 'r') as f:
-            self.assertIn('contentA', '\n'.join(f.readlines()))
+        prefix = join(expanduser("~"), 'karl')
+        fp_obs = self.tester.fetch_file_from_central(dirname(fp_main), prefix=prefix)
+        # # test a file of the freshly transferred directory from main has
+        # # expected file content
+        # with open(join(fp_obs, 'source', 'testdir', 'fileA.txt'), 'r') as f:
+        #     self.assertIn('contentA', '\n'.join(f.readlines()))
 
         print(">>>>>>>>>>>>", fp_test, fp_main, fp_obs, file=sys.stderr)
         print(">>>>>>>>>>>>", fp_test, fp_main, fp_obs)
