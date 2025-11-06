@@ -569,6 +569,7 @@ class QiitaClientTests(PluginTestCase):
         #     print(">>>>>>>>>>>> files >>> %s" % f, file=sys.stderr)
 
         prefix = join(expanduser("~"), 'karl')
+        self.tester._server_url.replace('8383', '21174')
         print(">>>>>server url>>>>>>>", self.tester._server_url, file=sys.stderr)
         fp_obs = self.tester.fetch_file_from_central(dirname(fp_main), prefix=prefix)
         # # test a file of the freshly transferred directory from main has
