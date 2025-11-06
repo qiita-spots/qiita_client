@@ -544,6 +544,17 @@ class QiitaClientTests(PluginTestCase):
         # fetch test directory from qiita main, this time storing it at
         # QIITA_BASE_DIR
         print(">>>>>C>>>>>>>", dirname(fp_main), file=sys.stderr)
+        import os
+        with open(os.environ['NGINX_FILE_NEW'], 'r') as f:
+            for l in f.readlines():
+                print(">>>>>>>>>>>> NGINX >>> %s" % l, file=sys.stderr)
+        with open(os.environ['QIITA_CONFIG_FP'], 'r') as f:
+            for l in f.readlines():
+                print(">>>>>>>>>>>> Q-Conf >>> %s" % l, file=sys.stderr)
+        from glob import glob
+        for f in glob('%s/**/*' % fp_main, recursive=True):
+            print(">>>>>>>>>>>> files >>> %s" % f, file=sys.stderr)
+
         fp_obs = self.tester.fetch_file_from_central(dirname(fp_main))
         # test a file of the freshly transferred directory from main has
         # expected file content
@@ -556,3 +567,9 @@ class QiitaClientTests(PluginTestCase):
 
 if __name__ == '__main__':
     main()
+
+
+>>>>>>>>>>>> ./job/2_test_folder/source /qiita_data/./job/2_test_folder/source /qiita_data/./job/2_test_folder
+2025-11-06T14:51:59.6108533Z >>>>>A>>>>>>> ./job/2_test_folder/source
+2025-11-06T14:51:59.6655140Z >>>>>B>>>>>>> /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/./job/2_test_folder/source
+2025-11-06T14:51:59.6656458Z >>>>>C>>>>>>> /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/./job/2_test_folder
