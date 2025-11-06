@@ -545,14 +545,15 @@ class QiitaClientTests(PluginTestCase):
         # QIITA_BASE_DIR
         print(">>>>>C>>>>>>>", dirname(fp_main), file=sys.stderr)
         import os
-        with open(os.environ['NGINX_FILE_NEW'], 'r') as f:
+
+        with open("/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_pet/nginx_example_local.conf", 'r') as f:
             for l in f.readlines():
                 print(">>>>>>>>>>>> NGINX >>> %s" % l, file=sys.stderr)
-        with open(os.environ['QIITA_CONFIG_FP'], 'r') as f:
+        with open('/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_core/support_files/config_test_local.cfg', 'r') as f:
             for l in f.readlines():
                 print(">>>>>>>>>>>> Q-Conf >>> %s" % l, file=sys.stderr)
         from glob import glob
-        for f in glob('%s/**/*' % fp_main, recursive=True):
+        for f in glob('/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/**/*', recursive=True):
             print(">>>>>>>>>>>> files >>> %s" % f, file=sys.stderr)
 
         fp_obs = self.tester.fetch_file_from_central(dirname(fp_main))
