@@ -535,10 +535,22 @@ class QiitaClientTests(PluginTestCase):
         self._create_test_dir(prefix=fp_test)
 
         # transmitting test directory into qiita main
+        # self.tester._plugincoupling = 'https'
+        # fakeTest = namedtuple("fakeTest", "qclient")
+        # fakeTest.qclient = self.tester
+        # fp_main = PluginTestCase.deposite_in_qiita_basedir(fakeTest, fp_test)
         self.tester._plugincoupling = 'https'
-        fakeTest = namedtuple("fakeTest", "qclient")
-        fakeTest.qclient = self.tester
-        fp_main = PluginTestCase.deposite_in_qiita_basedir(fakeTest, fp_test)
+        self.tester.push_file_to_central(fp_test)
+        # a bit hacky, but should work as long as test database does not change
+        ainfo = self.qclient.get('/qiita_db/artifacts/1/')
+        base_data_dir = ainfo['files']['raw_forward_seqs'][0]['filepath'][
+            :(-1 * len('raw_data/1_s_G1_L001_sequences.fastq.gz'))]
+        fp_main = join(base_data_dir, fp_test)
+
+        # fakeTest = namedtuple("fakeTest", "qclient")
+        # fakeTest.qclient = self.tester
+        # fp_main = PluginTestCase.deposite_in_qiita_basedir(fakeTest, fp_test)
+        
         print(">>>>>B>>>>>>>", fp_main, file=sys.stderr)
         
         # fetch test directory from qiita main, this time storing it at
@@ -555,6 +567,7 @@ class QiitaClientTests(PluginTestCase):
         from glob import glob
         for f in glob('/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/**/*', recursive=True):
             print(">>>>>>>>>>>> files >>> %s" % f, file=sys.stderr)
+
 
         fp_obs = self.tester.fetch_file_from_central(dirname(fp_main))
         # test a file of the freshly transferred directory from main has
