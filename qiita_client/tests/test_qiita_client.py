@@ -14,7 +14,7 @@ from tempfile import mkstemp
 from json import dumps
 import pandas as pd
 from shutil import rmtree
-from collections import namedtuple
+from pathlib import Path
 
 from qiita_client.qiita_client import (QiitaClient, _format_payload,
                                        ArtifactInfo)
@@ -545,7 +545,7 @@ class QiitaClientTests(PluginTestCase):
         ainfo = self.qclient.get('/qiita_db/artifacts/1/')
         base_data_dir = ainfo['files']['raw_forward_seqs'][0]['filepath'][
             :(-1 * len('raw_data/1_s_G1_L001_sequences.fastq.gz'))]
-        fp_main = join(base_data_dir, fp_test)
+        fp_main = join(base_data_dir, join(*Path(fp_test).parts))
 
         # fakeTest = namedtuple("fakeTest", "qclient")
         # fakeTest.qclient = self.tester
