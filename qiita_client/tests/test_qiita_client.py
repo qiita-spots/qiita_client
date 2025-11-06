@@ -528,8 +528,10 @@ class QiitaClientTests(PluginTestCase):
                 self.assertTrue(exists(fp_deleted))
 
     def test_fetch_directory(self):
+        import sys
         # creating a test directory
         fp_test = join('./job', '2_test_folder', 'source')
+        print(">>>>>A>>>>>>>", fp_test, file=sys.stderr)
         self._create_test_dir(prefix=fp_test)
 
         # transmitting test directory into qiita main
@@ -537,16 +539,17 @@ class QiitaClientTests(PluginTestCase):
         fakeTest = namedtuple("fakeTest", "qclient")
         fakeTest.qclient = self.tester
         fp_main = PluginTestCase.deposite_in_qiita_basedir(fakeTest, fp_test)
-
+        print(">>>>>B>>>>>>>", fp_main, file=sys.stderr)
+        
         # fetch test directory from qiita main, this time storing it at
         # QIITA_BASE_DIR
+        print(">>>>>C>>>>>>>", dirname(fp_main), file=sys.stderr)
         fp_obs = self.tester.fetch_file_from_central(dirname(fp_main))
         # test a file of the freshly transferred directory from main has
         # expected file content
         with open(join(fp_obs, 'source', 'testdir', 'fileA.txt'), 'r') as f:
             self.assertIn('contentA', '\n'.join(f.readlines()))
 
-        import sys
         print(">>>>>>>>>>>>", fp_test, fp_main, fp_obs, file=sys.stderr)
         print(">>>>>>>>>>>>", fp_test, fp_main, fp_obs)
 
