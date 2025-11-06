@@ -14,6 +14,7 @@ from tempfile import mkstemp
 from json import dumps
 import pandas as pd
 from shutil import rmtree
+from collections import namedtuple
 
 from qiita_client.qiita_client import (QiitaClient, _format_payload,
                                        ArtifactInfo)
@@ -525,6 +526,25 @@ class QiitaClientTests(PluginTestCase):
                 self.assertTrue(exists(fp_obs))
                 # qiita main filepath, returned by delete_file_from_central
                 self.assertTrue(exists(fp_deleted))
+
+    def test_fetch_directory(self):
+        # creating a test directory
+        fp_test = join('/job', '2_test_folder', 'source')
+        self._create_test_dir(prefix=fp_test)
+
+        # transmitting test directory into qiita main
+        self.tester._plugincoupling = 'https'
+        fakeTest = namedtuple("fakeTest", "qclient")
+        fakeTest.qclient = self.tester
+        fp_main = PluginTestCase.deposite_in_qiita_basedir(fakeTest, fp_test)
+
+        # fetch test directory from qiita main, this time storing it at
+        # QIITA_BASE_DIR
+        fp_obs = self.tester.fetch_file_from_central(dirname(fp_main))
+        # test a file of the freshly transferred directory from main has
+        # expected file content
+        with open(join(fp_obs, 'source', 'testdir', 'fileA.txt'), 'r') as f:
+            self.assertIn('contentA', '\n'.join(f.readlines()))
 
 
 if __name__ == '__main__':
