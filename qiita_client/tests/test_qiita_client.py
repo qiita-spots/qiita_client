@@ -569,7 +569,7 @@ if __name__ == '__main__':
     main()
 
 
->>>>>>>>>>>> ./job/2_test_folder/source /qiita_data/./job/2_test_folder/source /qiita_data/./job/2_test_folder
-2025-11-06T14:51:59.6108533Z >>>>>A>>>>>>> ./job/2_test_folder/source
-2025-11-06T14:51:59.6655140Z >>>>>B>>>>>>> /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/./job/2_test_folder/source
-2025-11-06T14:51:59.6656458Z >>>>>C>>>>>>> /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/./job/2_test_folder
+# >>>>>>>>>>>> ./job/2_test_folder/source /qiita_data/./job/2_test_folder/source /qiita_data/./job/2_test_folder
+# 2025-11-06T14:51:59.6108533Z >>>>>A>>>>>>> ./job/2_test_folder/source
+# 2025-11-06T14:51:59.6655140Z >>>>>B>>>>>>> /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/./job/2_test_folder/source
+# 2025-11-06T14:51:59.6656458Z >>>>>C>>>>>>> /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/./job/2_test_folder
