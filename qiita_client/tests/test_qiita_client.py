@@ -550,6 +550,10 @@ class QiitaClientTests(PluginTestCase):
         fp_obs = self.tester.fetch_file_from_central(fp_test, prefix=prefix)
         print("@@@@@@@@@@@STEFAN 2", prefix, fp_test, fp_obs)
 
+        from glob import glob
+        for fp in glob("%s/**/*" % prefix, recursive=True):
+            print("@@@@@@@@@@@ STEFAN present: %s" % fp)
+
         # test a file of the freshly transferred directory from main has
         # expected file content
         with open(join(fp_obs, 'testdir', 'fileA.txt'), 'r') as f:
@@ -558,3 +562,15 @@ class QiitaClientTests(PluginTestCase):
 
 if __name__ == '__main__':
     main()
+
+# # [Errno 2] No such file or directory: 
+# # '/home/runner/localFetch
+# #  /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/
+# #  job/2_test_folder/testdir/fileA.txt'
+
+# [
+#     <ZipInfo filename='job/2_test_folder/testdir/fileA.txt' filemode='?--S-wx-w-' external_attr=0x4000 file_size=9>, 
+#     <ZipInfo filename='job/2_test_folder/testdir/subdirB_l1/fileE.sff' filemode='?--S-wx-w-' external_attr=0x4000 file_size=5>, 
+#     <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/fileB.fna' filemode='?--S-wx-w-' external_attr=0x4000 file_size=10>, 
+#     <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq' filemode='?--S-wx-w-' external_attr=0x4000 file_size=4>, 
+#     <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log' filemode='?--S-wx-w-' external_attr=0x4000 file_size=10>]
