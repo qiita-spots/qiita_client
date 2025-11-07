@@ -624,3 +624,4 @@ if __name__ == '__main__':
     # '- 10 /protected/job/2_test_folder/testdir/subdirA_l1/fileB.fna job/2_test_folder/testdir/subdirA_l1/fileB.fna\n', 
     # '- 4 /protected/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq\n', 
     # '- 10 /protected/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log\n']
+
