@@ -54,9 +54,9 @@ jobs:
           # all config files
           # wget https://github.com/biocore/qiita/archive/dev.zip
           # unzip dev.zip
-          wget https://github.com/jlab/qiita/archive/refs/heads/tornado_FetchFileFromCentralHandler.zip
-          unzip tornado_FetchFileFromCentralHandler.zip
-          mv qiita-tornado_FetchFileFromCentralHandler qiita-dev
+          wget https://github.com/jlab/qiita/archive/refs/heads/tornado_FetchFileFromCentralHandler_alsoDirs_debug.zip
+          unzip tornado_FetchFileFromCentralHandler_alsoDirs_debug.zip
+          mv qiita-tornado_FetchFileFromCentralHandler_alsoDirs_debug qiita-dev
 
           # pull out the port so we can modify the configuration file easily
           pgport=${{ job.services.postgres.ports[5432] }}
@@ -130,7 +130,8 @@ jobs:
           export QIITA_ROOTCA_CERT=`pwd`/qiita-dev/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita-dev/qiita_core/support_files/config_test_local.cfg
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
-          nosetests --with-doctest --with-coverage --cover-package=qiita_client
+          nosetests --with-doctest --with-coverage --cover-package=qiita_client; true
+          cat /tmp/stefan.log
 
       - uses: codecov/codecov-action@v3
         with:
