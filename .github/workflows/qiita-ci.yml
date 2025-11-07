@@ -53,8 +53,10 @@ jobs:
           # we need to download qiita directly so we have "easy" access to
           # all config files
           # wget https://github.com/biocore/qiita/archive/dev.zip
-          wget https://github.com/jlab/qiita/archive/refs/heads/tornado_FetchFileFromCentralHandler.zip -O dev.zip
-          unzip dev.zip
+          # unzip dev.zip
+          wget https://github.com/jlab/qiita/archive/refs/heads/tornado_FetchFileFromCentralHandler.zip
+          unzip tornado_FetchFileFromCentralHandler.zip
+          mv qiita-tornado_FetchFileFromCentralHandler qiita-dev
 
           # pull out the port so we can modify the configuration file easily
           pgport=${{ job.services.postgres.ports[5432] }}
