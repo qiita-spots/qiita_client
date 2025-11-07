@@ -596,7 +596,6 @@ if __name__ == '__main__':
 
 
 
-
 # github
 #   base_data_dir: /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/
 #   prefix: /home/runner/localFetch
