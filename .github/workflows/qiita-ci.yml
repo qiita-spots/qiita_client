@@ -52,7 +52,8 @@ jobs:
 
           # we need to download qiita directly so we have "easy" access to
           # all config files
-          wget https://github.com/biocore/qiita/archive/dev.zip
+          # wget https://github.com/biocore/qiita/archive/dev.zip
+          wget https://github.com/jlab/qiita/archive/refs/heads/tornado_FetchFileFromCentralHandler.zip -O dev.zip
           unzip dev.zip
 
           # pull out the port so we can modify the configuration file easily
@@ -105,7 +106,6 @@ jobs:
           export NGINX_FILE=`pwd`/qiita-dev/qiita_pet/nginx_example.conf
           export NGINX_FILE_NEW=`pwd`/qiita-dev/qiita_pet/nginx_example_local.conf
           echo "error_log /home/runner/logs/nginx_error.log debug;" > ${NGINX_FILE_NEW}
-          echo "access_log /home/runner/logs/nginx_access.log debug;" >> ${NGINX_FILE_NEW}
           sed "s#/home/runner/work/qiita/qiita#${PWD}/qiita-dev#g" ${NGINX_FILE} >> ${NGINX_FILE_NEW}
           sed -i "s#/Users/username/qiita#${PWD}/qiita-dev#g" ${NGINX_FILE_NEW}
           nginx -V >&2
