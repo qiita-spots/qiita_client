@@ -546,6 +546,10 @@ class QiitaClientTests(PluginTestCase):
         prefix = join(expanduser("~"), 'karl')
         fp_obs = self.tester.fetch_file_from_central(
             dirname(fp_main), prefix=prefix)
+        
+        import sys
+        print(">>>>>>>>>>>>", fp_test, fp_main, fp_obs, file=sys.stderr)
+
         # test a file of the freshly transferred directory from main has
         # expected file content
         with open(join(fp_obs, 'source', 'testdir', 'fileA.txt'), 'r') as f:
