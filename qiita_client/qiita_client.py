@@ -817,6 +817,9 @@ class QiitaClient(object):
             # check if requested filepath is a single file OR a whole directory
             if 'Is-Qiita-Directory' in response.headers.keys():
                 with ZipFile(BytesIO(response.content)) as zf:
+                    import sys
+                    print("ÖÖÖÖÖ in client:\n%s" % zf.filelist, file=sys.stderr)
+
                     zf.extractall(path=target_filepath)
             else:
                 content = response.content
