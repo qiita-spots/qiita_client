@@ -14,7 +14,6 @@ from tempfile import mkstemp
 from json import dumps
 import pandas as pd
 from shutil import rmtree
-from pathlib import Path
 
 from qiita_client.qiita_client import (QiitaClient, _format_payload,
                                        ArtifactInfo)
@@ -528,29 +527,29 @@ class QiitaClientTests(PluginTestCase):
                 self.assertTrue(exists(fp_deleted))
 
     def test_fetch_directory(self):
-        # creating a test directory
-        fp_test = join('./job', '2_test_folder', 'source')
-        self._create_test_dir(prefix=fp_test)
-
-        # transmitting test directory into qiita main
-        self.tester._plugincoupling = 'https'
-        self.tester.push_file_to_central(fp_test)
         # a bit hacky, but should work as long as test database does not change
         ainfo = self.qclient.get('/qiita_db/artifacts/1/')
         base_data_dir = ainfo['files']['raw_forward_seqs'][0]['filepath'][
             :(-1 * len('raw_data/1_s_G1_L001_sequences.fastq.gz'))]
-        fp_main = join(base_data_dir, join(*Path(fp_test).parts))
 
-        # fetch test directory from qiita main, this time storing it at
-        # QIITA_BASE_DIR
+        # creating a LOCAL test directory within base_data_dir as the DB entry
+        # but no files exist. "job" is the according mountpoint
+        fp_test = join(base_data_dir, 'job', '2_test_folder')
+        self._create_test_dir(prefix=fp_test)
+
+        # transmitting test directory to qiita main (remote)
+        self.tester._plugincoupling = 'https'
+        self.tester.push_file_to_central(fp_test)
+        # fp_main = join(base_data_dir, join(*Path(fp_test).parts))
+
+        # fetch test directory from qiita main to a different location
+        # (=prefix) than it was generated
         prefix = join(expanduser("~"), 'localFetch')
-        fp_obs = self.tester.fetch_file_from_central(
-            dirname(fp_main), prefix=prefix)
+        fp_obs = self.tester.fetch_file_from_central(fp_test, prefix=prefix)
 
         # test a file of the freshly transferred directory from main has
         # expected file content
-        with open(join(fp_obs, 'job/2_test_folder/job/2_test_folder/',
-                       'source', 'testdir', 'fileA.txt'), 'r') as f:
+        with open(join(fp_obs, 'testdir', 'fileA.txt'), 'r') as f:
             self.assertIn('contentA', '\n'.join(f.readlines()))
 
 
