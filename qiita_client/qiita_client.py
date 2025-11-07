@@ -15,6 +15,9 @@ import pandas as pd
 from json import dumps
 from random import randint
 import fnmatch
+from io import BytesIO
+from zipfile import ZipFile
+
 
 try:
     from itertools import zip_longest
@@ -269,7 +272,7 @@ class QiitaClient(object):
             The request to execute
         rettype : string
             The return type of the function, either "json" or
-            if e.g. files are transferred "content"
+            "object" for the response object itself
         args : tuple
             The request args
         kwargs : dict
@@ -328,7 +331,7 @@ class QiitaClient(object):
             The request to execute
         rettype : string
             The return type of the function, either "json" (default) or
-            if e.g. files are transferred "content"
+            "object" for the response object itself
         url : str
             The url to access in the server
         kwargs : dict
@@ -336,7 +339,7 @@ class QiitaClient(object):
 
         Returns
         -------
-        dict or None or plain content IF rettype='content'
+        dict or None or response object IF rettype='object'
             The JSON information in the request response, if any
 
         Raises
@@ -391,13 +394,13 @@ class QiitaClient(object):
                     if rettype is None or rettype == 'json':
                         return r.json()
                     else:
-                        if rettype == 'content':
-                            return r.content
+                        if rettype == 'object':
+                            return r
                         else:
                             raise ValueError(
                                 ("return type rettype='%s' cannot be "
                                  "understand. Choose from 'json' (default) "
-                                 "or 'content!") % rettype)
+                                 "or 'object!") % rettype)
                 except ValueError:
                     return None
             stime = randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
@@ -418,7 +421,7 @@ class QiitaClient(object):
             The url to access in the server
         rettype : string
             The return type of the function, either "json" (default) or
-            if e.g. files are transferred "content"
+            "object" for the response object itself
         kwargs : dict
             The request kwargs
 
@@ -746,8 +749,8 @@ class QiitaClient(object):
         return sample_names, prep_info
 
     def fetch_file_from_central(self, filepath, prefix=None):
-        """Moves content of a file from Qiita's central BASE_DATA_DIR to a
-           local plugin file-system.
+        """Moves content of a file or directory from Qiita's central
+           BASE_DATA_DIR to a local plugin file-system.
 
            By default, this is exactly the same location, i.e. the return
            filepath is identical to the requested one and nothing is moved /
@@ -760,22 +763,24 @@ class QiitaClient(object):
         ----------
         filepath : str
             The filepath in Qiita's central BASE_DATA_DIR to the requested
-            file content
+            file or directory content
         prefix : str
             Primarily for testing: prefix the target filepath with this
             filepath prefix to
-            a) in 'filesystem' mode: create an actual file copy (for testing)
+            a) in 'filesystem' mode: create an actual file/directiry copy
+               (for testing)
                If prefix=None, nothing will be copied/moved
-            b) in 'https' mode: flexibility to locate files differently in
-               plugin local file system.
+            b) in 'https' mode: flexibility to locate files/directories
+               differently in plugin local file system.
 
         Returns
         -------
-        str : the filepath of the requested file within the local file system
+        str : the filepath of the requested file or directory within the local
+              file system
         """
         target_filepath = filepath
         logger.debug(
-            'Fetching file "%s" via protocol=%s from Qiita main.' % (
+            'Fetching file/directory "%s" via protocol=%s from Qiita main.' % (
                 filepath, self._plugincoupling))
 
         if (prefix is not None) and (prefix != ""):
@@ -792,7 +797,10 @@ class QiitaClient(object):
                 if not os.path.exists(os.path.dirname(target_filepath)):
                     os.makedirs(os.path.dirname(target_filepath))
 
-                shutil.copyfile(filepath, target_filepath)
+                if os.path.isdir(filepath):
+                    shutil.copytree(filepath, target_filepath)
+                else:
+                    shutil.copyfile(filepath, target_filepath)
 
             return target_filepath
 
@@ -802,17 +810,24 @@ class QiitaClient(object):
                 filepath = filepath[len(os.path.abspath(os.sep)):]
 
             # actual call to Qiita central to obtain file content
-            content = self.get(
+            response = self.get(
                 '/cloud/fetch_file_from_central/' + filepath,
-                rettype='content')
+                rettype='object')
 
-            # create necessary directory locally
-            if not os.path.exists(os.path.dirname(target_filepath)):
-                os.makedirs(os.path.dirname(target_filepath))
+            # check if requested filepath is a single file OR a whole directory
+            if 'Is-Qiita-Directory' in response.headers.keys():
+                with ZipFile(BytesIO(response.content)) as zf:
+                    zf.extractall(path=target_filepath)
+            else:
+                content = response.content
 
-            # write retrieved file content
-            with open(target_filepath, 'wb') as f:
-                f.write(content)
+                # create necessary directory locally
+                if not os.path.exists(os.path.dirname(target_filepath)):
+                    os.makedirs(os.path.dirname(target_filepath))
+
+                # write retrieved file content
+                with open(target_filepath, 'wb') as f:
+                    f.write(content)
 
             return target_filepath
 

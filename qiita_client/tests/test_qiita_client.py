@@ -526,6 +526,32 @@ class QiitaClientTests(PluginTestCase):
                 # qiita main filepath, returned by delete_file_from_central
                 self.assertTrue(exists(fp_deleted))
 
+    def test_fetch_directory(self):
+        # a bit hacky, but should work as long as test database does not change
+        ainfo = self.qclient.get('/qiita_db/artifacts/1/')
+        base_data_dir = ainfo['files']['raw_forward_seqs'][0]['filepath'][
+            :(-1 * len('raw_data/1_s_G1_L001_sequences.fastq.gz'))]
+
+        # creating a LOCAL test directory within base_data_dir as the DB entry
+        # but no files exist. "job" is the according mountpoint
+        fp_test = join(base_data_dir, 'job', '2_test_folder')
+        self._create_test_dir(prefix=fp_test)
+
+        # transmitting test directory to qiita main (remote)
+        self.tester._plugincoupling = 'https'
+        self.tester.push_file_to_central(fp_test)
+        # fp_main = join(base_data_dir, join(*Path(fp_test).parts))
+
+        # fetch test directory from qiita main to a different location
+        # (=prefix) than it was generated
+        prefix = join(expanduser("~"), 'localFetch')
+        fp_obs = self.tester.fetch_file_from_central(fp_test, prefix=prefix)
+
+        # test a file of the freshly transferred directory from main has
+        # expected file content
+        with open(join(fp_obs, 'testdir', 'fileA.txt'), 'r') as f:
+            self.assertIn('contentA', '\n'.join(f.readlines()))
+
 
 if __name__ == '__main__':
     main()
