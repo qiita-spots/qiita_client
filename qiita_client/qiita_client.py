@@ -817,9 +817,6 @@ class QiitaClient(object):
             # check if requested filepath is a single file OR a whole directory
             if 'Is-Qiita-Directory' in response.headers.keys():
                 with ZipFile(BytesIO(response.content)) as zf:
-                    import sys
-                    print("ÖÖÖÖÖ in client:\n%s" % zf.filelist, file=sys.stderr)
-
                     zf.extractall(path=target_filepath)
             else:
                 content = response.content
@@ -881,7 +878,6 @@ class QiitaClient(object):
                 for root, dirnames, filenames in os.walk(filepath):
                     for filename in fnmatch.filter(filenames, "*"):
                         fp = os.path.join(root, filename)
-                        print("äääääääääää '%s' '%s' '%s' '%s' " % (root, dirnames, filenames, os.path.join(dirpath, os.path.dirname(fp))))
                         self.post('/cloud/push_file_to_central/',
                                   files={os.path.join(
                                       dirpath,
