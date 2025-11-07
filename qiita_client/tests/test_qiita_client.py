@@ -554,6 +554,9 @@ class QiitaClientTests(PluginTestCase):
         for fp in glob("%s/**/*" % prefix, recursive=True):
             print("@@@@@@@@@@@ STEFAN present: %s" % fp)
 
+        with open('/tmp/stefan.log') as f:
+            print("üüüüüüüüüü log from qiita\n %s" % f.readlines())
+
         # test a file of the freshly transferred directory from main has
         # expected file content
         with open(join(fp_obs, 'testdir', 'fileA.txt'), 'r') as f:
@@ -574,3 +577,30 @@ if __name__ == '__main__':
 #     <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/fileB.fna' filemode='?--S-wx-w-' external_attr=0x4000 file_size=10>, 
 #     <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq' filemode='?--S-wx-w-' external_attr=0x4000 file_size=4>, 
 #     <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log' filemode='?--S-wx-w-' external_attr=0x4000 file_size=10>]
+
+# tinqiita:
+#    base_data_dir: /qiita_data/
+#    prefix: /root/localFetch/
+#    deposited file locations
+#       <prefix>/<base_data_dir>/job/2_test_folder/testdir/fileA.txt /root/localFetch/qiita_data/job/2_test_folder/testdir/fileA.txt
+#       /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirB_l1/fileE.sff
+#       /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirA_l1/fileB.fna
+#       /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log
+#       /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq
+# üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/fileA.txt
+# üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirB_l1/fileE.sff
+# üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirA_l1/fileB.fna
+# üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log
+# üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq
+
+
+# github:
+#    base_data_dir: /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/
+#    prefix: /home/runner/localFetch
+#    deposited file locations
+#       <prefix>/<basa_data_dir>/job/2_test_folder/job/2_test_folder/testdir/fileA.txt
+#       /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/fileA.txt
+#       /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirB_l1/fileE.sff
+#       /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirA_l1/fileB.fna
+#       /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq
+#       /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log
