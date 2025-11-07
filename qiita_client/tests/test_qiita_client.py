@@ -566,41 +566,61 @@ class QiitaClientTests(PluginTestCase):
 if __name__ == '__main__':
     main()
 
-# # [Errno 2] No such file or directory: 
-# # '/home/runner/localFetch
-# #  /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/
-# #  job/2_test_folder/testdir/fileA.txt'
+# tinqiita
+#   base_data_dir: /qiita_data/
+#   prefix: /root/localFetch
+#   actual files after fetch
+# @@@@@@@@@@@ STEFAN present: /root/localFetch/qiita_data/job/2_test_folder/testdir/fileA.txt
+# @@@@@@@@@@@ STEFAN present: /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirB_l1/fileE.sff
+# @@@@@@@@@@@ STEFAN present: /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirA_l1/fileB.fna
+# @@@@@@@@@@@ STEFAN present: /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log
+# @@@@@@@@@@@ STEFAN present: /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq
+#   files at Main:
+#  'üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/fileA.txt\n', 
+#  'üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirB_l1/fileE.sff\n', 
+#  'üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirA_l1/fileB.fna\n', 
+#  'üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log\n', 
+#  'üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq\n']
+#   when fetching dir
+#       <ZipInfo filename='testdir/fileA.txt' compress_type=deflate filemode='-rw-r--r--' file_size=9 compress_size=11>, 
+#       <ZipInfo filename='testdir/subdirB_l1/fileE.sff' compress_type=deflate filemode='-rw-r--r--' file_size=5 compress_size=7>, 
+#       <ZipInfo filename='testdir/subdirA_l1/fileB.fna' compress_type=deflate filemode='-rw-r--r--' file_size=10 compress_size=10>, 
+#       <ZipInfo filename='testdir/subdirA_l1/subdirC_l2/fileC.log' compress_type=deflate filemode='-rw-r--r--' file_size=10 compress_size=12>, 
+#       <ZipInfo filename='testdir/subdirA_l1/subdirC_l2/fileD.seq' compress_type=deflate filemode='-rw-r--r--' file_size=4 compress_size=6>]
 
-# [
-#     <ZipInfo filename='job/2_test_folder/testdir/fileA.txt' filemode='?--S-wx-w-' external_attr=0x4000 file_size=9>, 
-#     <ZipInfo filename='job/2_test_folder/testdir/subdirB_l1/fileE.sff' filemode='?--S-wx-w-' external_attr=0x4000 file_size=5>, 
-#     <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/fileB.fna' filemode='?--S-wx-w-' external_attr=0x4000 file_size=10>, 
-#     <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq' filemode='?--S-wx-w-' external_attr=0x4000 file_size=4>, 
-#     <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log' filemode='?--S-wx-w-' external_attr=0x4000 file_size=10>]
-
-# tinqiita:
-#    base_data_dir: /qiita_data/
-#    prefix: /root/localFetch/
-#    deposited file locations
-#       <prefix>/<base_data_dir>/job/2_test_folder/testdir/fileA.txt /root/localFetch/qiita_data/job/2_test_folder/testdir/fileA.txt
-#       /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirB_l1/fileE.sff
-#       /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirA_l1/fileB.fna
-#       /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log
-#       /root/localFetch/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq
-# üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/fileA.txt
-# üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirB_l1/fileE.sff
-# üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirA_l1/fileB.fna
-# üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log
-# üüüüüüüü qiita filepath=/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq
+# üüüüüüüü da bin ich baff=/qiita_data/job/2_test_folder/testdir/fileA.txt testdir/fileA.txt
+# üüüüüüüü da bin ich baff=/qiita_data/job/2_test_folder/testdir/subdirB_l1/fileE.sff testdir/subdirB_l1/fileE.sff
+# üüüüüüüü da bin ich baff=/qiita_data/job/2_test_folder/testdir/subdirA_l1/fileB.fna testdir/subdirA_l1/fileB.fna
+# üüüüüüüü da bin ich baff=/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log testdir/subdirA_l1/subdirC_l2/fileC.log
+# üüüüüüüü da bin ich baff=/qiita_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq testdir/subdirA_l1/subdirC_l2/fileD.seq\n']
 
 
-# github:
-#    base_data_dir: /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/
-#    prefix: /home/runner/localFetch
-#    deposited file locations
-#       <prefix>/<basa_data_dir>/job/2_test_folder/job/2_test_folder/testdir/fileA.txt
-#       /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/fileA.txt
-#       /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirB_l1/fileE.sff
-#       /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirA_l1/fileB.fna
-#       /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq
-#       /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log
+
+
+# github
+#   base_data_dir: /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/
+#   prefix: /home/runner/localFetch
+#   actual files after fetch
+# @@@@@@@@@@@ STEFAN present: /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/fileA.txt
+# @@@@@@@@@@@ STEFAN present: /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirB_l1/fileE.sff
+# @@@@@@@@@@@ STEFAN present: /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirA_l1/fileB.fna
+# @@@@@@@@@@@ STEFAN present: /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq
+# @@@@@@@@@@@ STEFAN present: /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log
+#   files at Main:
+#  'üüüüüüüü qiita filepath=/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/testdir/fileA.txt\n', 
+#  'üüüüüüüü qiita filepath=/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/testdir/subdirB_l1/fileE.sff\n', 
+#  'üüüüüüüü qiita filepath=/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/testdir/subdirA_l1/fileB.fna\n', 
+#  'üüüüüüüü qiita filepath=/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq\n', 
+#  'üüüüüüüü qiita filepath=/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log\n']
+#   when fetching dir
+#       <ZipInfo filename='job/2_test_folder/testdir/fileA.txt' filemode='?--S-wx-w-' external_attr=0x4000 file_size=9>, 
+#       <ZipInfo filename='job/2_test_folder/testdir/subdirB_l1/fileE.sff' filemode='?--S-wx-w-' external_attr=0x4000 file_size=5>, 
+#       <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/fileB.fna' filemode='?--S-wx-w-' external_attr=0x4000 file_size=10>, 
+#       <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq' filemode='?--S-wx-w-' external_attr=0x4000 file_size=4>, 
+#       <ZipInfo filename='job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log' filemode='?--S-wx-w-' external_attr=0x4000 file_size=10>]
+# all_files
+    # '- 9 /protected/job/2_test_folder/testdir/fileA.txt job/2_test_folder/testdir/fileA.txt\n', 
+    # '- 5 /protected/job/2_test_folder/testdir/subdirB_l1/fileE.sff job/2_test_folder/testdir/subdirB_l1/fileE.sff\n', 
+    # '- 10 /protected/job/2_test_folder/testdir/subdirA_l1/fileB.fna job/2_test_folder/testdir/subdirA_l1/fileB.fna\n', 
+    # '- 4 /protected/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileD.seq\n', 
+    # '- 10 /protected/job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log job/2_test_folder/testdir/subdirA_l1/subdirC_l2/fileC.log\n']
