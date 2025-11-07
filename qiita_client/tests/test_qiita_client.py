@@ -546,36 +546,11 @@ class QiitaClientTests(PluginTestCase):
         prefix = join(expanduser("~"), 'localFetch')
         fp_obs = self.tester.fetch_file_from_central(
             dirname(fp_main), prefix=prefix)
-        
-        import sys
-        print(">>>>>>>>>>>>", fp_test, fp_main, fp_obs, file=sys.stderr)
-        from glob import glob
-        for fp in glob("%s/**/*" % fp_obs, recursive=True):
-            print(">>>>>>>>glob>>>> %s" % fp)
-        # >>>>>>>>>>>> ./job/2_test_folder/source /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/source /home/runner/karl/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder
-        #                             /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder
-        # No such file or directory: '/home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/source/testdir/fileA.txt'
-
-# 2025-11-07T08:12:39.6827567Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job
-# 2025-11-07T08:12:39.6828500Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder
-# 2025-11-07T08:12:39.6829468Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job
-# 2025-11-07T08:12:39.6830521Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder
-# 2025-11-07T08:12:39.6831641Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder/source
-# 2025-11-07T08:12:39.6832764Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder/source/testdir
-# 2025-11-07T08:12:39.6833951Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder/source/testdir/fileA.txt
-# 2025-11-07T08:12:39.6835367Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder/source/testdir/subdirB_l1
-# 2025-11-07T08:12:39.6836581Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder/source/testdir/subdirA_l1
-# 2025-11-07T08:12:39.6837856Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder/source/testdir/subdirB_l1/fileE.sff
-# 2025-11-07T08:12:39.6839142Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder/source/testdir/subdirA_l1/fileB.fna
-# 2025-11-07T08:12:39.6840407Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder/source/testdir/subdirA_l1/subdirC_l2
-# 2025-11-07T08:12:39.6841923Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder/source/testdir/subdirA_l1/subdirC_l2/fileD.seq
-# 2025-11-07T08:12:39.6843318Z >>>>>>>>glob>>>> /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/job/2_test_folder/job/2_test_folder/source/testdir/subdirA_l1/subdirC_l2/fileC.log
-
-# No such file or directory:                   '/home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/source/testdir/fileA.txt'
 
         # test a file of the freshly transferred directory from main has
         # expected file content
-        with open(join(fp_obs, 'job/2_test_folder/job/2_test_folder/', 'source', 'testdir', 'fileA.txt'), 'r') as f:
+        with open(join(fp_obs, 'job/2_test_folder/job/2_test_folder/',
+                       'source', 'testdir', 'fileA.txt'), 'r') as f:
             self.assertIn('contentA', '\n'.join(f.readlines()))
 
 
