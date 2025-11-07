@@ -130,8 +130,7 @@ jobs:
           export QIITA_ROOTCA_CERT=`pwd`/qiita-dev/qiita_core/support_files/ci_rootca.crt
           export QIITA_CONFIG_FP=`pwd`/qiita-dev/qiita_core/support_files/config_test_local.cfg
           export QIITA_CLIENT_DEBUG_LEVEL=DEBUG
-          nosetests --with-doctest --with-coverage --cover-package=qiita_client; true
-          cat /tmp/stefan.log
+          nosetests --with-doctest --with-coverage --cover-package=qiita_client; cat /tmp/stefan.log
 
       - uses: codecov/codecov-action@v3
         with:
