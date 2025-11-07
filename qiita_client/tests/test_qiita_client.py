@@ -543,12 +543,18 @@ class QiitaClientTests(PluginTestCase):
 
         # fetch test directory from qiita main, this time storing it at
         # QIITA_BASE_DIR
-        prefix = join(expanduser("~"), 'karl')
+        prefix = join(expanduser("~"), 'localFetch')
         fp_obs = self.tester.fetch_file_from_central(
             dirname(fp_main), prefix=prefix)
         
         import sys
         print(">>>>>>>>>>>>", fp_test, fp_main, fp_obs, file=sys.stderr)
+        from glob import glob
+        for fp in glob("%s/**/*" % fp_obs, recursive=True):
+            print(">>>>>>>>glob>>>> %s" % fp)
+        # >>>>>>>>>>>> ./job/2_test_folder/source /home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/source /home/runner/karl/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder
+        #                             /home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder
+        # No such file or directory: '/home/runner/localFetch/home/runner/work/qiita_client/qiita_client/qiita-dev/qiita_db/support_files/test_data/job/2_test_folder/source/testdir/fileA.txt'
 
         # test a file of the freshly transferred directory from main has
         # expected file content
