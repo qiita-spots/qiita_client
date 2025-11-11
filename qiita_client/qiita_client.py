@@ -863,8 +863,9 @@ class QiitaClient(object):
             return filepath
 
         elif self._plugincoupling == 'https':
-            logger.debug('Submitting %s %s to qiita server.' % (
-                'directory' if os.path.isdir(filepath) else 'file', filepath))
+            logger.debug('Submitting %s %s to qiita server via %s' % (
+                'directory' if os.path.isdir(filepath) else 'file', filepath,
+                self._plugincoupling))
 
             # target path, i.e. without filename
             dirpath = os.path.dirname(filepath)
