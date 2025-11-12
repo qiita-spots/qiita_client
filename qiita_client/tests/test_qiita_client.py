@@ -511,20 +511,10 @@ class QiitaClientTests(PluginTestCase):
 
             # delete file and test if it is gone
             fp_deleted = self.qclient.delete_file_from_central(fp_test)
-            if protocol == 'filesystem':
-                # all three fp should point to the same filepath
-                self.assertFalse(exists(fp_obs))
-                self.assertFalse(exists(fp_test))
-                self.assertFalse(exists(fp_deleted))
-            elif protocol == 'https':
-                # as of 2025-09-26, I don't allow deletion of qiita main files
-                # through API endpoints. Thus, the file is NOT deleted!
-                # local version of the file
-                self.assertTrue(exists(fp_test))
-                # qiita main filepath
-                self.assertTrue(exists(fp_obs))
-                # qiita main filepath, returned by delete_file_from_central
-                self.assertTrue(exists(fp_deleted))
+            # all three fp should point to the same filepath
+            self.assertFalse(exists(fp_obs))
+            self.assertFalse(exists(fp_test))
+            self.assertFalse(exists(fp_deleted))
 
     def test_fetch_directory(self):
         # a bit hacky, but should work as long as test database does not change
