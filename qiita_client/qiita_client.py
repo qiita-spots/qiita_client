@@ -924,11 +924,10 @@ class QiitaClient(object):
             else:
                 os.remove(filepath)
         elif self._plugincoupling == 'https':
-            try:
-                response = self.get(
-                    '/cloud/delete_file_from_central/' + filepath,
-                    rettype='object')
-            except:
-                pass
+            # will return in internal server error, when qiita is in productive
+            # mode
+            response = self.get(
+                '/cloud/delete_file_from_central/' + filepath,
+                rettype='object')
 
         return filepath
