@@ -897,10 +897,13 @@ class QiitaClient(object):
     def delete_file_from_central(self, filepath):
         """Deletes a file in Qiita's central BASE_DATA_DIR directory.
 
-        I currently (2025-09-25) assess this operation to be too dangerous for
+        I currently (2025-11-12) assess this operation to be too dangerous for
         protocols other than "filesystem", i.e. on "https" the files are NOT
         deleted.
-        However, this might change in the future and since I don't want to
+        However, in plugin tests, this function is needed and I therefore
+        implemented an API endpoint which is only activated when Qiita main
+        instance is operated in test mode.
+        This might change in the future and since I don't want to
         touch every plugin's code again, I am adding this function here already
         and use it in according plugin code locations, e.g. function _gzip_file
         in qtp-sequencing.
@@ -916,8 +919,16 @@ class QiitaClient(object):
         The given filepath - to be transparent in plugin code.
         """
         if self._plugincoupling == 'filesystem':
-            os.remove(filepath)
+            if os.path.isdir(filepath):
+                shutil.rmtree(filepath)
+            else:
+                os.remove(filepath)
         elif self._plugincoupling == 'https':
-            pass
+            try:
+                response = self.get(
+                    '/cloud/delete_file_from_central/' + filepath,
+                    rettype='object')
+            except:
+                pass
 
         return filepath
