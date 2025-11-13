@@ -137,10 +137,17 @@ class QiitaCommand(object):
 
     def __call__(self, qclient, server_url, job_id, output_dir):
         logger.debug('Entered QiitaCommand.__call__()')
-        status, artifacts, error_message = self.function(
+        results = self.function(
             qclient, server_url, job_id, output_dir)
-        return status, QiitaCommand._push_artifacts_files_to_central(
-            qclient, artifacts), error_message
+        # typical, but not all, functions of QiitaCommands return 3-tuple
+        # status=bool, list of artifacts, error_message=str
+        if isinstance(results, tuple) and (len(results) == 3) and \
+           isinstance(results[0], bool) and \
+           isinstance(results[1], list) and \
+           isinstance(results[2], str):
+            results[1] = QiitaCommand._push_artifacts_files_to_central(
+                qclient, results[1])
+        return results
 
 
 class QiitaArtifactType(object):
