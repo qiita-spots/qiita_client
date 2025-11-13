@@ -113,9 +113,6 @@ class PluginTestCase(TestCase):
                 return fp[len(sep):]
             return fp
 
-        if self.qclient._plugincoupling == 'filesystem':
-            return fps
-
         # use artifact 1 info to determine BASA_DATA_DIR, as we know that the
         # filepath ends with ....raw_data/1_s_G1_L001_sequences.fastq.gz, thus
         # BASE_DATA_DIR must be the prefix, e.g. /qiita_data/
