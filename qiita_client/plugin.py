@@ -100,9 +100,47 @@ class QiitaCommand(object):
         self.outputs = outputs
         self.analysis_only = analysis_only
 
+    def _push_artifacts_files_to_central(qclient, artifacts):
+        """Pushes all files of a list of artifacts to BASE_DATA_DIR.
+
+        Parameters
+        ----------
+        qclient : qiita_client.QiitaClient
+            The Qiita server client
+        artifacts : [ArtifactInfo]
+            A list of qiita Artifacts
+
+        Returns
+        -------
+        The input list of artifacts
+        """
+        if artifacts is None:
+            return artifacts
+
+        for artifact in artifacts:
+            if artifact is not None:
+                if 'files' in artifact.keys():
+                    artifact['files'] = {
+                        filetype: [
+                            {
+                                k: qclient.push_file_to_central(v)
+                                if k == 'filepath' else v
+                                for k, v
+                                in file.items()}
+                            for file
+                            in artifact['files'][filetype]]
+                        for filetype
+                        in artifact['files'].keys()
+                    }
+
+        return artifacts
+
     def __call__(self, qclient, server_url, job_id, output_dir):
         logger.debug('Entered QiitaCommand.__call__()')
-        return self.function(qclient, server_url, job_id, output_dir)
+        status, artifacts, error_message = self.function(
+            qclient, server_url, job_id, output_dir)
+        return status, QiitaCommand._push_artifacts_files_to_central(
+            qclient, artifacts), error_message
 
 
 class QiitaArtifactType(object):
