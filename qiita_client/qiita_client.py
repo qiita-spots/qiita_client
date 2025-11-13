@@ -919,10 +919,11 @@ class QiitaClient(object):
         The given filepath - to be transparent in plugin code.
         """
         if self._plugincoupling == 'filesystem':
-            if os.path.isdir(filepath):
-                shutil.rmtree(filepath)
-            else:
-                os.remove(filepath)
+            if os.path.exists(filepath):
+                if os.path.isdir(filepath):
+                    shutil.rmtree(filepath)
+                else:
+                    os.remove(filepath)
         elif self._plugincoupling == 'https':
             # will return in internal server error, when qiita is in productive
             # mode
