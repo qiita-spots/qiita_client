@@ -15,7 +15,7 @@ from os import makedirs, environ
 from future import standard_library
 from json import dumps
 import urllib
-from qiita_client import QiitaClient
+from qiita_client import QiitaClient, ArtifactInfo
 
 import logging
 
@@ -100,9 +100,45 @@ class QiitaCommand(object):
         self.outputs = outputs
         self.analysis_only = analysis_only
 
+    @staticmethod
+    def _push_artifacts_files_to_central(qclient, artifacts):
+        """Pushes all files of a list of artifacts to BASE_DATA_DIR.
+
+        Parameters
+        ----------
+        qclient : qiita_client.QiitaClient
+            The Qiita server client
+        artifacts : [ArtifactInfo]
+            A list of qiita Artifacts
+
+        Returns
+        -------
+        The input list of artifacts
+        """
+        if artifacts is None:
+            return artifacts
+
+        for artifact in artifacts:
+            if isinstance(artifact, ArtifactInfo):
+                for i in range(len(artifact.files)):
+                    (fp, ftype) = artifact.files[i]
+                    # send file to Qiita central and potentially update
+                    # filepath, which is not done at the moment (2025-11-14)
+                    fp = qclient.push_file_to_central(fp)
+                    artifact.files[i] = (fp, ftype)
+
     def __call__(self, qclient, server_url, job_id, output_dir):
         logger.debug('Entered QiitaCommand.__call__()')
-        return self.function(qclient, server_url, job_id, output_dir)
+        results = self.function(
+            qclient, server_url, job_id, output_dir)
+        # typical, but not all, functions of QiitaCommands return 3-tuple
+        # status=bool, list of artifacts, error_message=str
+        if isinstance(results, tuple) and (len(results) == 3) and \
+           isinstance(results[0], bool) and \
+           isinstance(results[1], list) and \
+           isinstance(results[2], str):
+            QiitaCommand._push_artifacts_files_to_central(qclient, results[1])
+        return results
 
 
 class QiitaArtifactType(object):

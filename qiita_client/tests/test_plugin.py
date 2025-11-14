@@ -73,6 +73,23 @@ class QiitaCommandTest(TestCase):
                            self.exp_opt, self.exp_out, self.exp_dflt)
         self.assertEqual(obs('a', 'b', 'c', 'd'), 42)
 
+    def test__push_artifacts_files_to_central(self):
+        class fakeClient():
+            def push_file_to_central(self, filepath):
+                return 'pushed:%s' % filepath
+
+        artifacts = [
+            ArtifactInfo("stefArtiName", "Atype", [
+                ("fp1", "preprocessed_fasta"),
+                ("fp2", "preprocessed_fastq")]),
+            None,
+            ArtifactInfo("artiName", "artiType", [])]
+        QiitaCommand._push_artifacts_files_to_central(fakeClient(), artifacts)
+
+        self.assertIn('pushed:', artifacts[0].files[0][0])
+        self.assertIn('pushed:', artifacts[0].files[1][0])
+        self.assertEqual([], artifacts[2].files)
+
 
 class QiitaArtifactTypeTest(TestCase):
     def test_init(self):
