@@ -17,6 +17,7 @@ from random import randint
 import fnmatch
 from io import BytesIO
 from zipfile import ZipFile
+import re
 
 
 try:
@@ -412,6 +413,38 @@ class QiitaClient(object):
             "Request '%s %s' did not succeed. Status code: %d. Message: %s"
             % (req.__name__, url, r.status_code, r.text))
 
+    def _fetch_artifact_files(self, ainfo):
+        """helper method to fetch all files of an artifact from Qiita main.
+
+        Parameters
+        ----------
+        ainfo : json dict
+            Information about Qiita artifact
+
+        Returns
+        -------
+        Same as input BUT filepaths are adapated after downloading files from
+        Qiita main to local IF protocol coupling != filesystem. Otherwise, no
+        change occurs.
+        """
+        if self._plugincoupling != 'filesystem':
+            if 'files' in ainfo.keys():
+                ainfo['files'] = {
+                    filetype: [
+                        {
+                            k: self.fetch_file_from_central(v)
+                            if k == 'filepath' else v
+                            for k, v
+                            in file.items()}
+                        for file
+                        in ainfo['files'][filetype]]
+                    for filetype
+                    in ainfo['files'].keys()
+                }
+            return ainfo
+        else:
+            return ainfo
+
     def get(self, url, rettype='json', **kwargs):
         """Execute a get request against the Qiita server
 
@@ -431,8 +464,27 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.get()')
-        return self._request_retry(
+        result = self._request_retry(
             self._session.get, url, rettype=rettype, **kwargs)
+
+        if self._plugincoupling != 'filesystem':
+            # intercept get requests from plugins that request metadata or
+            # artifact files and ensure they get transferred from Qiita
+            # central, when not using "filesystem"
+            if re.search(r"/qiita_db/prep_template/\d+/?$", url):
+                # client is requesting filepath to a prep/metadata file, see
+                # qiita/qiita_db/handlers/prep_template.py::
+                #   PrepTemplateDBHandler::get
+                # for the "result" data-structure
+                for fp in ['prep-file', 'sample-file']:
+                    result[fp] = self.fetch_file_from_central(result[fp])
+            elif re.search(r"/qiita_db/artifacts/\d+/?$", url):
+                # client is requesting an artifact, see
+                # qiita/qiita_db/handlers/artifact.py::ArtifactHandler::get
+                # for the "result" data-structure
+                result = self._fetch_artifact_files(result)
+
+        return result
 
     def post(self, url, **kwargs):
         """Execute a post request against the Qiita server
