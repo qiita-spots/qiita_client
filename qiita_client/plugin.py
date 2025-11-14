@@ -100,6 +100,7 @@ class QiitaCommand(object):
         self.outputs = outputs
         self.analysis_only = analysis_only
 
+    @staticmethod
     def _push_artifacts_files_to_central(qclient, artifacts):
         """Pushes all files of a list of artifacts to BASE_DATA_DIR.
 
@@ -136,8 +137,7 @@ class QiitaCommand(object):
            isinstance(results[0], bool) and \
            isinstance(results[1], list) and \
            isinstance(results[2], str):
-            results[1] = QiitaCommand._push_artifacts_files_to_central(
-                qclient, results[1])
+            QiitaCommand._push_artifacts_files_to_central(qclient, results[1])
         return results
 
 
