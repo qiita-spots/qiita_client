@@ -15,7 +15,7 @@ from os import makedirs, environ
 from future import standard_library
 from json import dumps
 import urllib
-from qiita_client import QiitaClient
+from qiita_client import QiitaClient, ArtifactInfo
 
 import logging
 
@@ -118,22 +118,13 @@ class QiitaCommand(object):
             return artifacts
 
         for artifact in artifacts:
-            if artifact is not None:
-                if 'files' in artifact.keys():
-                    artifact['files'] = {
-                        filetype: [
-                            {
-                                k: qclient.push_file_to_central(v)
-                                if k == 'filepath' else v
-                                for k, v
-                                in file.items()}
-                            for file
-                            in artifact['files'][filetype]]
-                        for filetype
-                        in artifact['files'].keys()
-                    }
-
-        return artifacts
+            if isinstance(artifact, ArtifactInfo):
+                for i in range(len(artifact.files)):
+                    (fp, ftype) = artifact.files[i]
+                    # send file to Qiita central and potentially update
+                    # filepath, which is not done at the moment (2025-11-14)
+                    fp = qclient.push_file_to_central(fp)
+                    artifact.files[i] = (fp, ftype)
 
     def __call__(self, qclient, server_url, job_id, output_dir):
         logger.debug('Entered QiitaCommand.__call__()')
