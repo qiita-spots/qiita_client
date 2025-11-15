@@ -120,10 +120,13 @@ class QiitaCommand(object):
 
         for artifact in artifacts:
             if isinstance(artifact, ArtifactInfo):
+                logger.debug('QiitaCommand::__call__: Push artifact files '
+                             'via %s to central:' % qclient._plugincoupling)
                 for i in range(len(artifact.files)):
                     (fp, ftype) = artifact.files[i]
                     # send file to Qiita central and potentially update
                     # filepath, which is not done at the moment (2025-11-14)
+                    logger.debug('  artifact files %s pushed to central' % fp)
                     fp = qclient.push_file_to_central(fp)
                     artifact.files[i] = (fp, ftype)
 

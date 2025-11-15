@@ -428,6 +428,8 @@ class QiitaClient(object):
         change occurs.
         """
         if self._plugincoupling != 'filesystem':
+            logger.debug('QiitaClient::get: fetching artfiact file from '
+                         'central: %s' % ainfo['files'])
             if 'files' in ainfo.keys():
                 ainfo['files'] = {
                     filetype: [
@@ -476,7 +478,10 @@ class QiitaClient(object):
                 # qiita/qiita_db/handlers/prep_template.py::
                 #   PrepTemplateDBHandler::get
                 # for the "result" data-structure
+                logger.debug('QiitaClient::get: fetching artifact metadata'
+                             '-file from central:')
                 for fp in ['prep-file', 'sample-file']:
+                    logger.debug('QiitaClient::get:   file %s' % result[fp])
                     result[fp] = self.fetch_file_from_central(result[fp])
             elif re.search(r"/qiita_db/artifacts/\d+/?$", url):
                 # client is requesting an artifact, see
