@@ -7,8 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase
-from os import environ, sep
-from os.path import join, isabs
+from os import environ
 from time import sleep
 
 from qiita_client import QiitaClient
@@ -45,6 +44,16 @@ class PluginTestCase(TestCase):
         # variable here.
         cls.qclient._plugincoupling = environ.get(
             'QIITA_PLUGINCOUPLING', BaseQiitaPlugin._DEFAULT_PLUGIN_COUPLINGS)
+
+        # use artifact 1 info to determine BASA_DATA_DIR, as we know that the
+        # filepath ends with ....raw_data/1_s_G1_L001_sequences.fastq.gz, thus
+        # BASE_DATA_DIR must be the prefix, e.g. /qiita_data/
+        # This might break IF file
+        #    qiita-spots/qiita/qiita_db/support_files/populate_test_db.sql
+        # changes.
+        ainfo = cls.qclient.get('/qiita_db/artifacts/1/')
+        cls.base_data_dir = ainfo['files']['raw_forward_seqs'][0]['filepath'][
+            :(-1 * len('raw_data/1_s_G1_L001_sequences.fastq.gz'))]
 
         # Give enough time for the plugins to register
         sleep(5)
@@ -83,55 +92,3 @@ class PluginTestCase(TestCase):
                 break
 
         return status
-
-    def deposite_in_qiita_basedir(self, fps, update_fp_only=False):
-        """Pushs a file to qiita main AND adapts given filepath accordingly.
-
-        A helper function to fix file paths in tests such that they point to
-        the expected BASE_DATA_DIR. This becomes necessary when uncoupling the
-        plugin filesystem as some methods now actually fetches expected files
-        from BASE_DATA_DIR. This will fail for protocols other than filesystem
-        IF files are created locally by the plugin test.
-
-        Parameters
-        ----------
-        fps : str or [str]
-            Filepath or list of filepaths to file(s) that shall be part of
-            BASE_DATA_DIR, but currently points to some tmp file for testing.
-        update_fp_only : bool
-            Some tests operate on filepaths only - files do not actually need
-            to exist. Thus, we don't need to tranfer a file.
-
-        Returns
-        -------
-        The potentially modified filepaths.
-        """
-        def _stripRoot(fp):
-            # chop off leading / for join to work properly when prepending
-            # the BASE_DATA_DIR
-            if isabs(fp):
-                return fp[len(sep):]
-            return fp
-
-        # use artifact 1 info to determine BASA_DATA_DIR, as we know that the
-        # filepath ends with ....raw_data/1_s_G1_L001_sequences.fastq.gz, thus
-        # BASE_DATA_DIR must be the prefix, e.g. /qiita_data/
-        # This might break IF file
-        #    qiita-spots/qiita/qiita_db/support_files/populate_test_db.sql
-        # changes.
-        ainfo = self.qclient.get('/qiita_db/artifacts/1/')
-        base_data_dir = ainfo['files']['raw_forward_seqs'][0]['filepath'][
-            :(-1 * len('raw_data/1_s_G1_L001_sequences.fastq.gz'))]
-        if isinstance(fps, str):
-            if not update_fp_only:
-                self.qclient.push_file_to_central(fps)
-            return join(base_data_dir, _stripRoot(fps))
-        elif isinstance(fps, list):
-            for fp in fps:
-                if not update_fp_only:
-                    self.qclient.push_file_to_central(fp)
-            return [join(base_data_dir, _stripRoot(fp)) for fp in fps]
-        else:
-            raise ValueError(
-                "deposite_in_qiita_basedir is not implemented for type %s"
-                % type(fps))
