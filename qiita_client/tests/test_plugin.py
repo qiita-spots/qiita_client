@@ -75,7 +75,7 @@ class QiitaCommandTest(TestCase):
 
     def test__push_artifacts_files_to_central(self):
         class fakeClient():
-            def __init__():
+            def __init__(self):
                 self._plugincoupling = 'null protocol'
 
             def push_file_to_central(self, filepath):
