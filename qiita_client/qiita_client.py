@@ -12,7 +12,13 @@ import time
 import requests
 import threading
 import pandas as pd
-from json import dumps, loads, JSONDecodeError
+from json import dumps, loads
+try:
+    from json import JSONDecodeError
+except ImportError:
+    # dirty hack to cope with the fact that python 2.7 does not have
+    # JSONDecodeError, but is needed for qp-target-gene plugin
+    JSONDecodeError = ValueError
 from random import randint
 import fnmatch
 from io import BytesIO
