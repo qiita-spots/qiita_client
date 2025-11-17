@@ -45,15 +45,15 @@ class PluginTestCase(TestCase):
         cls.qclient._plugincoupling = environ.get(
             'QIITA_PLUGINCOUPLING', BaseQiitaPlugin._DEFAULT_PLUGIN_COUPLINGS)
 
-        # use artifact 1 info to determine BASA_DATA_DIR, as we know that the
-        # filepath ends with ....raw_data/1_s_G1_L001_sequences.fastq.gz, thus
-        # BASE_DATA_DIR must be the prefix, e.g. /qiita_data/
+        # Determine BASE_DATA_DIR of qiita central, without having direct
+        # access to qiita's settings file. This is done by requesting
+        # information about prep 1, which should be in the test database.
         # This might break IF file
         #    qiita-spots/qiita/qiita_db/support_files/populate_test_db.sql
         # changes.
-        ainfo = cls.qclient.get('/qiita_db/artifacts/1/')
-        cls.base_data_dir = ainfo['files']['raw_forward_seqs'][0]['filepath'][
-            :(-1 * len('raw_data/1_s_G1_L001_sequences.fastq.gz'))]
+        prep_info = cls.qclient.get('/qiita_db/prep_template/1/',
+                                    no_file_fetching=True)
+        cls.base_data_dir = prep_info['prep-file'].split('templates/')[0]
 
         # Give enough time for the plugins to register
         sleep(5)
