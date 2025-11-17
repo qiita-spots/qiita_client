@@ -12,7 +12,7 @@ import time
 import requests
 import threading
 import pandas as pd
-from json import dumps, loads
+from json import dumps, loads, JSONDecodeError
 from random import randint
 import fnmatch
 from io import BytesIO
@@ -581,7 +581,7 @@ class QiitaClient(object):
            (path == '/html_summary/') and (op == 'add'):
             if re.search(r"/qiita_db/artifacts/\d+/?$", url):
                 if value is not None:
-                    logger.debug('QiitaClient::patch: push summary files to'
+                    logger.debug('QiitaClient::patch: push summary files to '
                                  'central: %s' % value)
                     try:
                         # values might be an json encoded dictioary with
@@ -591,7 +591,7 @@ class QiitaClient(object):
                             if (ftype in dictValues.keys()) and \
                                (dictValues[ftype] is not None):
                                 self.push_file_to_central(dictValues[ftype])
-                    except TypeError:
+                    except (TypeError, JSONDecodeError):
                         # or just a single string, i.e. filepath
                         self.push_file_to_central(value)
 
