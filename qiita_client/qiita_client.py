@@ -12,7 +12,7 @@ import time
 import requests
 import threading
 import pandas as pd
-from json import dumps
+from json import dumps, loads
 from random import randint
 import fnmatch
 from io import BytesIO
@@ -389,7 +389,8 @@ class QiitaClient(object):
             elif r.status_code in (500, 405):
                 raise RuntimeError(
                     "Request '%s %s' did not succeed. Status code: %d. "
-                    "Message: %s" % (req.__name__, url, r.status_code, r.text))
+                    "Message: %s%s" % (req.__name__, url, r.status_code,
+                                       r.text, r.reason))
             elif 0 <= (r.status_code - 200) < 100:
                 try:
                     if rettype is None or rettype == 'json':
@@ -573,6 +574,26 @@ class QiitaClient(object):
         # it is ok to overwrite given that otherwise the call will fail and
         # we made sure that data is correctly formatted here
         kwargs['data'] = data
+
+        # similar to above get() injection mechanism, we are here pushing files
+        # to Qiita central, when patching artifact summaries
+        if (self._plugincoupling != 'filesystem') and \
+           (path == '/html_summary/') and (op == 'add'):
+            if re.search(r"/qiita_db/artifacts/\d+/?$", url):
+                if value is not None:
+                    logger.debug('QiitaClient::patch: push summary files to' \
+                                 'central: %s' % value)
+                    try:
+                        # values might be an json encoded dictioary with
+                        # multiple filepaths...
+                        dictValues = loads(value)
+                        for ftype in ['html', 'dir']:
+                            if (ftype in dictValues.keys()) and \
+                               (dictValues[ftype] is not None):
+                                self.push_file_to_central(dictValues[ftype])
+                    except TypeError as e:
+                        # or just a single string, i.e. filepath
+                        self.push_file_to_central(value)
 
         return self._request_retry(
             self._session.patch, url, rettype='json', **kwargs)
