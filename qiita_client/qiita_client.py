@@ -447,7 +447,7 @@ class QiitaClient(object):
         else:
             return ainfo
 
-    def get(self, url, rettype='json', **kwargs):
+    def get(self, url, rettype='json', no_file_fetching=False, **kwargs):
         """Execute a get request against the Qiita server
 
         Parameters
@@ -457,6 +457,12 @@ class QiitaClient(object):
         rettype : string
             The return type of the function, either "json" (default) or
             "object" for the response object itself
+        no_file_fetching : bool
+            If plugin is coupled through none "filesystem" protocols, artifact
+            files will automatically fetched from Qiita central when requesting
+            via "/qiita_db/prep_template/" or "/qiita_db/artifacts/". For
+            testing, you can turn off this behaviour. Handy if e.g. files not
+            yet exists in Qiita central.
         kwargs : dict
             The request kwargs
 
@@ -469,7 +475,8 @@ class QiitaClient(object):
         result = self._request_retry(
             self._session.get, url, rettype=rettype, **kwargs)
 
-        if self._plugincoupling != 'filesystem':
+        if (self._plugincoupling != 'filesystem') and \
+           (no_file_fetching is False):
             # intercept get requests from plugins that request metadata or
             # artifact files and ensure they get transferred from Qiita
             # central, when not using "filesystem"
