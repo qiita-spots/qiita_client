@@ -13,7 +13,7 @@ from random import SystemRandom
 from os.path import exists, join, expanduser
 from os import makedirs, environ
 from future import standard_library
-from json import dumps
+from json import dumps, loads
 import urllib
 from qiita_client import QiitaClient, ArtifactInfo
 
@@ -350,6 +350,26 @@ class BaseQiitaPlugin(object):
             # Execute the given task
             task_name = job_info['command']
             task = self.task_dict[task_name]
+
+            # "Validator" jobs operate on data that have not yet been
+            # registered as 'real' artifacts in qiita as this shall only happen
+            # iff validator commands pass. Hence, Validator commands don't use
+            # API calls to /qiita_db/artifacts/ to obtain file-paths. In these
+            # cases, files get fetched from qiita main with the following
+            # mechanism
+            if (task_name == 'Validate') and \
+               (qclient._plugincoupling != 'filesystem'):
+                if ('parameters' in job_info.keys()) and \
+                   ('files' in job_info['parameters']):
+                    logger.debug(
+                        ('Plugin::__call__: fetching artifact candidate file '
+                         'from central %s') % job_info['parameters']['files'])
+                    job_info['parameters']['files'] = dumps(
+                        {filetype: [qclient.fetch_file_from_central(fp)
+                                    for fp
+                                    in fps]
+                         for filetype, fps
+                         in loads(job_info['parameters']['files']).items()})
 
             if not exists(output_dir):
                 makedirs(output_dir)
