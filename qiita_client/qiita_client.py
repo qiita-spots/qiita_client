@@ -435,7 +435,7 @@ class QiitaClient(object):
         change occurs.
         """
         if self._plugincoupling != 'filesystem':
-            logger.debug('QiitaClient::get: fetching artfiact file from '
+            logger.debug('QiitaClient::get: fetching artifact file from '
                          'central: %s' % ainfo['files'])
             if 'files' in ainfo.keys():
                 ainfo['files'] = {
