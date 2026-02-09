@@ -298,6 +298,37 @@ class BaseQiitaPlugin(object):
                 qclient.post('/qiita_db/plugins/%s/%s/commands/'
                              % (self.name, self.version), data=data)
 
+    def _fetch_job_files(qclient, task_name, job_info):
+        """helper method to fetch all files of a job from Qiita main.
+
+        Parameters
+        ----------
+        qclient : qiita_client.QiitaClient
+            The Qiita server client
+
+        Function might update the provided job_info['parameters']['files']
+        values.
+        """
+        # "Validator" jobs operate on data that have not yet been
+        # registered as 'real' artifacts in qiita as this shall only happen
+        # iff validator commands pass. Hence, Validator commands don't use
+        # API calls to /qiita_db/artifacts/ to obtain file-paths. In these
+        # cases, files get fetched from qiita main with the following
+        # mechanism
+        if (task_name == 'Validate') and \
+           (qclient._plugincoupling != 'filesystem'):
+            if ('parameters' in job_info.keys()) and \
+               ('files' in job_info['parameters']):
+                logger.debug(
+                    ('Plugin::__call__: fetching artifact candidate file '
+                        'from central %s') % job_info['parameters']['files'])
+                job_info['parameters']['files'] = dumps(
+                    {filetype: [qclient.fetch_file_from_central(fp)
+                                for fp
+                                in fps]
+                     for filetype, fps
+                     in loads(job_info['parameters']['files']).items()})
+
     def __call__(self, server_url, job_id, output_dir):
         """Runs the plugin and executed the assigned task
 
@@ -351,29 +382,12 @@ class BaseQiitaPlugin(object):
             task_name = job_info['command']
             task = self.task_dict[task_name]
 
-            # "Validator" jobs operate on data that have not yet been
-            # registered as 'real' artifacts in qiita as this shall only happen
-            # iff validator commands pass. Hence, Validator commands don't use
-            # API calls to /qiita_db/artifacts/ to obtain file-paths. In these
-            # cases, files get fetched from qiita main with the following
-            # mechanism
-            if (task_name == 'Validate') and \
-               (qclient._plugincoupling != 'filesystem'):
-                if ('parameters' in job_info.keys()) and \
-                   ('files' in job_info['parameters']):
-                    logger.debug(
-                        ('Plugin::__call__: fetching artifact candidate file '
-                         'from central %s') % job_info['parameters']['files'])
-                    job_info['parameters']['files'] = dumps(
-                        {filetype: [qclient.fetch_file_from_central(fp)
-                                    for fp
-                                    in fps]
-                         for filetype, fps
-                         in loads(job_info['parameters']['files']).items()})
-
             if not exists(output_dir):
                 makedirs(output_dir)
             try:
+                # for uncoupled plugins: fetch job files, otherwise do nothing
+                self._fetch_job_files(qclient, task_name, job_info)
+
                 success, artifacts_info, error_msg = task(
                     qclient, job_id, job_info['parameters'], output_dir)
             except Exception:
