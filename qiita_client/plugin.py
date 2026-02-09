@@ -298,13 +298,18 @@ class BaseQiitaPlugin(object):
                 qclient.post('/qiita_db/plugins/%s/%s/commands/'
                              % (self.name, self.version), data=data)
 
-    def _fetch_job_files(qclient, task_name, job_info):
+    def _fetch_job_files(self, qclient, task_name, job_info):
         """helper method to fetch all files of a job from Qiita main.
 
         Parameters
         ----------
         qclient : qiita_client.QiitaClient
-            The Qiita server client
+            The Qiita server client.
+        task_name : str
+            Name of the qiita command being executed. Here, to test
+            if == 'Validate'.
+        job_info : dict
+            Information about the job.
 
         Function might update the provided job_info['parameters']['files']
         values.
