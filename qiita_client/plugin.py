@@ -391,7 +391,8 @@ class BaseQiitaPlugin(object):
                 makedirs(output_dir)
             try:
                 # for uncoupled plugins: fetch job files, otherwise do nothing
-                self._fetch_job_files(qclient, task_name, job_info)
+                if qclient._plugincoupling != 'filesystem':
+                    self._fetch_job_files(qclient, task_name, job_info)
 
                 success, artifacts_info, error_msg = task(
                     qclient, job_id, job_info['parameters'], output_dir)
