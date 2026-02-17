@@ -9,7 +9,7 @@
 from unittest import TestCase, main
 import filecmp
 from os import remove, close, makedirs
-from os.path import basename, exists, expanduser, join, isdir, dirname
+from os.path import basename, exists, expanduser, join, isdir
 from tempfile import mkstemp
 from json import dumps
 import pandas as pd
@@ -142,7 +142,8 @@ class QiitaClientTests(PluginTestCase):
             'type': 'FASTQ',
             'name': 'Raw data 1',
             'analysis': None}
-
+        import sys
+        print("Stefan obs: %s" % obs, file=sys.stderr)
         # Files contain the full path, which it is hard to test, so get only
         # the basename of the files
         obs_files = obs.pop('files')
@@ -158,6 +159,7 @@ class QiitaClientTests(PluginTestCase):
                 {'filepath': '1_s_G1_L001_sequences.fastq.gz',
                  'size': 58}]}
 
+        print("Stefan pre-comp, obs=%s, exp=%s" % (obs, exp), file=sys.stderr)
         self.assertEqual(obs, exp)
         self.assertEqual(obs_files, exp_files)
 
