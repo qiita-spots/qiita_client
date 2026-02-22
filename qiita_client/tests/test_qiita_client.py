@@ -8,11 +8,12 @@
 
 from unittest import TestCase, main
 import filecmp
-from os import remove, close
-from os.path import basename, exists, expanduser, join
+from os import remove, close, makedirs
+from os.path import basename, exists, expanduser, join, isdir
 from tempfile import mkstemp
 from json import dumps
 import pandas as pd
+from shutil import rmtree
 
 from qiita_client.qiita_client import (QiitaClient, _format_payload,
                                        ArtifactInfo)
@@ -110,7 +111,10 @@ class QiitaClientTests(PluginTestCase):
     def tearDown(self):
         for fp in self.clean_up_files:
             if exists(fp):
-                remove(fp)
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
 
     def test_init(self):
         obs = QiitaClient(URL,
@@ -137,7 +141,8 @@ class QiitaClientTests(PluginTestCase):
             'ebi_run_accessions': None,
             'type': 'FASTQ',
             'name': 'Raw data 1',
-            'analysis': None}
+            'analysis': None,
+            'parents': []}
 
         # Files contain the full path, which it is hard to test, so get only
         # the basename of the files
@@ -184,7 +189,7 @@ class QiitaClientTests(PluginTestCase):
         with open(fp, 'w') as f:
             f.write('\n')
         self.clean_up_files.append(fp)
-        obs = self.tester.patch(f'/qiita_db/artifacts/{artifact_id}/', 'add',
+        obs = self.tester.patch('/qiita_db/artifacts/%s/' % artifact_id, 'add',
                                 '/html_summary/', value=fp)
         self.assertIsNone(obs)
 
@@ -439,6 +444,76 @@ class QiitaClientTests(PluginTestCase):
         self.clean_up_files.append(fp_source)
         fp_obs = self.tester.push_file_to_central(fp_source)
         self.assertEqual(fp_source, fp_obs)
+
+    def _create_test_dir(self, prefix=None):
+        """Creates a test directory with files and subdirs."""
+        # prefix
+        # |- testdir/
+        # |---- fileA.txt
+        # |---- subdirA_l1/
+        # |-------- fileB.fna
+        # |-------- subdirC_l2/
+        # |------------ fileC.log
+        # |------------ fileD.seq
+        # |---- subdirB_l1/
+        # |-------- fileE.sff
+        if (prefix is not None) and (prefix != ""):
+            prefix = join(prefix, 'testdir')
+        else:
+            prefix = 'testdir'
+
+        for dir in [join(prefix, 'subdirA_l1', 'subdirC_l2'),
+                    join(prefix, 'subdirB_l1')]:
+            if not exists(dir):
+                makedirs(dir)
+        for file, cont in [(join(prefix, 'fileA.txt'), 'contentA'),
+                           (join(prefix, 'subdirA_l1',
+                                 'fileB.fna'), 'this is B'),
+                           (join(prefix, 'subdirA_l1', 'subdirC_l2',
+                                 'fileC.log'), 'call me c'),
+                           (join(prefix, 'subdirA_l1', 'subdirC_l2',
+                                 'fileD.seq'), 'I d'),
+                           (join(prefix, 'subdirB_l1', 'fileE.sff'), 'oh e')]:
+            with open(file, "w") as f:
+                f.write(cont + "\n")
+        self.clean_up_files.append(prefix)
+
+        return prefix
+
+    def test_push_file_to_central_dir(self):
+        self.tester._plugincoupling = 'https'
+
+        fp_source = self._create_test_dir('/tmp/test_push_dir/')
+        fp_obs = self.tester.push_file_to_central(fp_source)
+        self.assertEqual(fp_source, fp_obs)
+        # As we don't necessarily know the QIITA_BASE_DIR, we cannot fetch one
+        # of the files to double check for it's content
+
+    def test_fetch_directory(self):
+        # a bit hacky, but should work as long as test database does not change
+        ainfo = self.qclient.get('/qiita_db/artifacts/1/')
+        base_data_dir = ainfo['files']['raw_forward_seqs'][0]['filepath'][
+            :(-1 * len('raw_data/1_s_G1_L001_sequences.fastq.gz'))]
+
+        # creating a LOCAL test directory within base_data_dir as the DB entry
+        # but no files exist. "job" is the according mountpoint
+        fp_test = join(base_data_dir, 'job', '2_test_folder')
+        self._create_test_dir(prefix=fp_test)
+
+        # transmitting test directory to qiita main (remote)
+        self.tester._plugincoupling = 'https'
+        self.tester.push_file_to_central(fp_test)
+        # fp_main = join(base_data_dir, join(*Path(fp_test).parts))
+
+        # fetch test directory from qiita main to a different location
+        # (=prefix) than it was generated
+        prefix = join(expanduser("~"), 'localFetch')
+        fp_obs = self.tester.fetch_file_from_central(fp_test, prefix=prefix)
+
+        # test a file of the freshly transferred directory from main has
+        # expected file content
+        with open(join(fp_obs, 'testdir', 'fileA.txt'), 'r') as f:
+            self.assertIn('contentA', '\n'.join(f.readlines()))
 
 
 if __name__ == '__main__':

@@ -12,8 +12,19 @@ import time
 import requests
 import threading
 import pandas as pd
-from json import dumps
+from json import dumps, loads
+try:
+    from json import JSONDecodeError
+except ImportError:
+    # dirty hack to cope with the fact that python 2.7 does not have
+    # JSONDecodeError, but is needed for qp-target-gene plugin
+    JSONDecodeError = ValueError
 from random import randint
+import fnmatch
+from io import BytesIO
+from zipfile import ZipFile
+import re
+
 
 try:
     from itertools import zip_longest
@@ -268,7 +279,7 @@ class QiitaClient(object):
             The request to execute
         rettype : string
             The return type of the function, either "json" or
-            if e.g. files are transferred "content"
+            "object" for the response object itself
         args : tuple
             The request args
         kwargs : dict
@@ -327,7 +338,7 @@ class QiitaClient(object):
             The request to execute
         rettype : string
             The return type of the function, either "json" (default) or
-            if e.g. files are transferred "content"
+            "object" for the response object itself
         url : str
             The url to access in the server
         kwargs : dict
@@ -335,7 +346,7 @@ class QiitaClient(object):
 
         Returns
         -------
-        dict or None or plain content IF rettype='content'
+        dict or None or response object IF rettype='object'
             The JSON information in the request response, if any
 
         Raises
@@ -384,19 +395,20 @@ class QiitaClient(object):
             elif r.status_code in (500, 405):
                 raise RuntimeError(
                     "Request '%s %s' did not succeed. Status code: %d. "
-                    "Message: %s" % (req.__name__, url, r.status_code, r.text))
+                    "Message: %s%s" % (req.__name__, url, r.status_code,
+                                       r.text, r.reason))
             elif 0 <= (r.status_code - 200) < 100:
                 try:
                     if rettype is None or rettype == 'json':
                         return r.json()
                     else:
-                        if rettype == 'content':
-                            return r.content
+                        if rettype == 'object':
+                            return r
                         else:
                             raise ValueError(
                                 ("return type rettype='%s' cannot be "
                                  "understand. Choose from 'json' (default) "
-                                 "or 'content!") % rettype)
+                                 "or 'object!") % rettype)
                 except ValueError:
                     return None
             stime = randint(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
@@ -408,7 +420,41 @@ class QiitaClient(object):
             "Request '%s %s' did not succeed. Status code: %d. Message: %s"
             % (req.__name__, url, r.status_code, r.text))
 
-    def get(self, url, rettype='json', **kwargs):
+    def _fetch_artifact_files(self, ainfo):
+        """helper method to fetch all files of an artifact from Qiita main.
+
+        Parameters
+        ----------
+        ainfo : json dict
+            Information about Qiita artifact
+
+        Returns
+        -------
+        Same as input BUT filepaths are adapated after downloading files from
+        Qiita main to local IF protocol coupling != filesystem. Otherwise, no
+        change occurs.
+        """
+        if self._plugincoupling != 'filesystem':
+            logger.debug('QiitaClient::get: fetching artifact file from '
+                         'central: %s' % ainfo['files'])
+            if 'files' in ainfo.keys():
+                ainfo['files'] = {
+                    filetype: [
+                        {
+                            k: self.fetch_file_from_central(v)
+                            if k == 'filepath' else v
+                            for k, v
+                            in file.items()}
+                        for file
+                        in ainfo['files'][filetype]]
+                    for filetype
+                    in ainfo['files'].keys()
+                }
+            return ainfo
+        else:
+            return ainfo
+
+    def get(self, url, rettype='json', no_file_fetching=False, **kwargs):
         """Execute a get request against the Qiita server
 
         Parameters
@@ -417,7 +463,13 @@ class QiitaClient(object):
             The url to access in the server
         rettype : string
             The return type of the function, either "json" (default) or
-            if e.g. files are transferred "content"
+            "object" for the response object itself
+        no_file_fetching : bool
+            If plugin is coupled through none "filesystem" protocols, artifact
+            files will automatically fetched from Qiita central when requesting
+            via "/qiita_db/prep_template/" or "/qiita_db/artifacts/". For
+            testing, you can turn off this behaviour. Handy if e.g. files not
+            yet exists in Qiita central.
         kwargs : dict
             The request kwargs
 
@@ -427,8 +479,31 @@ class QiitaClient(object):
             The JSON response from the server
         """
         logger.debug('Entered QiitaClient.get()')
-        return self._request_retry(
+        result = self._request_retry(
             self._session.get, url, rettype=rettype, **kwargs)
+
+        if (self._plugincoupling != 'filesystem') and \
+           (no_file_fetching is False):
+            # intercept get requests from plugins that request metadata or
+            # artifact files and ensure they get transferred from Qiita
+            # central, when not using "filesystem"
+            if re.search(r"/qiita_db/prep_template/\d+/?$", url):
+                # client is requesting filepath to a prep/metadata file, see
+                # qiita/qiita_db/handlers/prep_template.py::
+                #   PrepTemplateDBHandler::get
+                # for the "result" data-structure
+                logger.debug('QiitaClient::get: fetching artifact metadata'
+                             '-file from central:')
+                for fp in ['prep-file', 'sample-file']:
+                    logger.debug('QiitaClient::get:   file %s' % result[fp])
+                    result[fp] = self.fetch_file_from_central(result[fp])
+            elif re.search(r"/qiita_db/artifacts/\d+/?$", url):
+                # client is requesting an artifact, see
+                # qiita/qiita_db/handlers/artifact.py::ArtifactHandler::get
+                # for the "result" data-structure
+                result = self._fetch_artifact_files(result)
+
+        return result
 
     def post(self, url, **kwargs):
         """Execute a post request against the Qiita server
@@ -505,6 +580,26 @@ class QiitaClient(object):
         # it is ok to overwrite given that otherwise the call will fail and
         # we made sure that data is correctly formatted here
         kwargs['data'] = data
+
+        # similar to above get() injection mechanism, we are here pushing files
+        # to Qiita central, when patching artifact summaries
+        if (self._plugincoupling != 'filesystem') and \
+           (path == '/html_summary/') and (op == 'add'):
+            if re.search(r"/qiita_db/artifacts/\d+/?$", url):
+                if value is not None:
+                    logger.debug('QiitaClient::patch: push summary files to '
+                                 'central: %s' % value)
+                    try:
+                        # values might be an json encoded dictioary with
+                        # multiple filepaths...
+                        dictValues = loads(value)
+                        for ftype in ['html', 'dir']:
+                            if (ftype in dictValues.keys()) and \
+                               (dictValues[ftype] is not None):
+                                self.push_file_to_central(dictValues[ftype])
+                    except (TypeError, JSONDecodeError):
+                        # or just a single string, i.e. filepath
+                        self.push_file_to_central(value)
 
         return self._request_retry(
             self._session.patch, url, rettype='json', **kwargs)
@@ -745,8 +840,8 @@ class QiitaClient(object):
         return sample_names, prep_info
 
     def fetch_file_from_central(self, filepath, prefix=None):
-        """Moves content of a file from Qiita's central BASE_DATA_DIR to a
-           local plugin file-system.
+        """Moves content of a file or directory from Qiita's central
+           BASE_DATA_DIR to a local plugin file-system.
 
            By default, this is exactly the same location, i.e. the return
            filepath is identical to the requested one and nothing is moved /
@@ -759,20 +854,26 @@ class QiitaClient(object):
         ----------
         filepath : str
             The filepath in Qiita's central BASE_DATA_DIR to the requested
-            file content
+            file or directory content
         prefix : str
             Primarily for testing: prefix the target filepath with this
             filepath prefix to
-            a) in 'filesystem' mode: create an actual file copy (for testing)
+            a) in 'filesystem' mode: create an actual file/directiry copy
+               (for testing)
                If prefix=None, nothing will be copied/moved
-            b) in 'https' mode: flexibility to locate files differently in
-               plugin local file system.
+            b) in 'https' mode: flexibility to locate files/directories
+               differently in plugin local file system.
 
         Returns
         -------
-        str : the filepath of the requested file within the local file system
+        str : the filepath of the requested file or directory within the local
+              file system
         """
         target_filepath = filepath
+        logger.debug(
+            'Fetching file/directory "%s" via protocol=%s from Qiita main.' % (
+                filepath, self._plugincoupling))
+
         if (prefix is not None) and (prefix != ""):
             # strip off root
             if filepath.startswith(os.path.abspath(os.sep)):
@@ -784,9 +885,13 @@ class QiitaClient(object):
         if self._plugincoupling == 'filesystem':
             if (prefix is not None) and (prefix != ""):
                 # create necessary directory locally
-                os.makedirs(os.path.dirname(target_filepath), exist_ok=True)
+                if not os.path.exists(os.path.dirname(target_filepath)):
+                    os.makedirs(os.path.dirname(target_filepath))
 
-                shutil.copyfile(filepath, target_filepath)
+                if os.path.isdir(filepath):
+                    shutil.copytree(filepath, target_filepath)
+                else:
+                    shutil.copyfile(filepath, target_filepath)
 
             return target_filepath
 
@@ -795,19 +900,25 @@ class QiitaClient(object):
             if filepath.startswith(os.path.abspath(os.sep)):
                 filepath = filepath[len(os.path.abspath(os.sep)):]
 
-            logger.debug('Requesting file %s from qiita server.' % filepath)
-
             # actual call to Qiita central to obtain file content
-            content = self.get(
+            response = self.get(
                 '/cloud/fetch_file_from_central/' + filepath,
-                rettype='content')
+                rettype='object')
 
-            # create necessary directory locally
-            os.makedirs(os.path.dirname(target_filepath), exist_ok=True)
+            # check if requested filepath is a single file OR a whole directory
+            if 'Is-Qiita-Directory' in response.headers.keys():
+                with ZipFile(BytesIO(response.content)) as zf:
+                    zf.extractall(path=target_filepath)
+            else:
+                content = response.content
 
-            # write retrieved file content
-            with open(target_filepath, 'wb') as f:
-                f.write(content)
+                # create necessary directory locally
+                if not os.path.exists(os.path.dirname(target_filepath)):
+                    os.makedirs(os.path.dirname(target_filepath))
+
+                # write retrieved file content
+                with open(target_filepath, 'wb') as f:
+                    f.write(content)
 
             return target_filepath
 
@@ -817,20 +928,23 @@ class QiitaClient(object):
                  "configuration is NOT defined.") % self._plugincoupling)
 
     def push_file_to_central(self, filepath):
-        """Pushs filecontent to Qiita's central BASE_DATA_DIR directory.
+        """Pushs file- or directory content to Qiita's central BASE_DATA_DIR
+           directory.
 
         By default, plugin and Qiita's central BASE_DATA_DIR filesystems are
         identical. In this case, no files are touched and the filepath is
         directly returned.
         If however, plugincoupling is set to 'https', the content of the file
-        is sent via https POST to Qiita's master/worker, which has to receive
-        and store in an appropriate location.
+        (or content of recursively all files in the given directory) is sent
+        via https POST to Qiita's master/worker, which has to receive and store
+        in an appropriate location.
 
         Parameters
         ----------
         filepath : str
-            The filepath of the files whos content shall be send to Qiita's
-            central BASE_DATA_DIR
+            The filepath of the file(s) whos content shall be send to Qiita's
+            central BASE_DATA_DIR.
+            Can be a path to a directory as well.
 
         Returns
         -------
@@ -840,16 +954,30 @@ class QiitaClient(object):
             return filepath
 
         elif self._plugincoupling == 'https':
-            logger.debug('Submitting file %s to qiita server.' % filepath)
+            logger.debug('Submitting %s %s to qiita server via %s' % (
+                'directory' if os.path.isdir(filepath) else 'file', filepath,
+                self._plugincoupling))
 
             # target path, i.e. without filename
             dirpath = os.path.dirname(filepath)
             if dirpath == "":
                 dirpath = "/"
 
-            self.post(
-                '/cloud/push_file_to_central/',
-                files={dirpath: open(filepath, 'rb')})
+            if os.path.isdir(filepath):
+                # Pushing all files of a directory, not only a single file.
+                # Cannot use "glob" as it lacks the "recursive" parameter in
+                # py27. This is used e.g. in qp-target-gene
+                for root, dirnames, filenames in os.walk(filepath):
+                    for filename in fnmatch.filter(filenames, "*"):
+                        fp = os.path.join(root, filename)
+                        self.post('/cloud/push_file_to_central/',
+                                  files={os.path.join(
+                                      dirpath,
+                                      os.path.dirname(fp)): open(fp, 'rb')})
+            else:
+                self.post(
+                    '/cloud/push_file_to_central/',
+                    files={dirpath: open(filepath, 'rb')})
 
             return filepath
 

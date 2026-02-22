@@ -13,9 +13,9 @@ from random import SystemRandom
 from os.path import exists, join, expanduser
 from os import makedirs, environ
 from future import standard_library
-from json import dumps
+from json import dumps, loads
 import urllib
-from qiita_client import QiitaClient
+from qiita_client import QiitaClient, ArtifactInfo
 
 import logging
 
@@ -100,9 +100,48 @@ class QiitaCommand(object):
         self.outputs = outputs
         self.analysis_only = analysis_only
 
+    @staticmethod
+    def _push_artifacts_files_to_central(qclient, artifacts):
+        """Pushes all files of a list of artifacts to BASE_DATA_DIR.
+
+        Parameters
+        ----------
+        qclient : qiita_client.QiitaClient
+            The Qiita server client
+        artifacts : [ArtifactInfo]
+            A list of qiita Artifacts
+
+        Returns
+        -------
+        The input list of artifacts
+        """
+        if artifacts is None:
+            return artifacts
+
+        for artifact in artifacts:
+            if isinstance(artifact, ArtifactInfo):
+                logger.debug('QiitaCommand::__call__: Push artifact files '
+                             'via %s to central:' % qclient._plugincoupling)
+                for i in range(len(artifact.files)):
+                    (fp, ftype) = artifact.files[i]
+                    # send file to Qiita central and potentially update
+                    # filepath, which is not done at the moment (2025-11-14)
+                    logger.debug('  artifact files %s pushed to central' % fp)
+                    fp = qclient.push_file_to_central(fp)
+                    artifact.files[i] = (fp, ftype)
+
     def __call__(self, qclient, server_url, job_id, output_dir):
         logger.debug('Entered QiitaCommand.__call__()')
-        return self.function(qclient, server_url, job_id, output_dir)
+        results = self.function(
+            qclient, server_url, job_id, output_dir)
+        # typical, but not all, functions of QiitaCommands return 3-tuple
+        # status=bool, list of artifacts, error_message=str
+        if isinstance(results, tuple) and (len(results) == 3) and \
+           isinstance(results[0], bool) and \
+           isinstance(results[1], list) and \
+           isinstance(results[2], str):
+            QiitaCommand._push_artifacts_files_to_central(qclient, results[1])
+        return results
 
 
 class QiitaArtifactType(object):
@@ -259,6 +298,42 @@ class BaseQiitaPlugin(object):
                 qclient.post('/qiita_db/plugins/%s/%s/commands/'
                              % (self.name, self.version), data=data)
 
+    def _fetch_job_files(self, qclient, task_name, job_info):
+        """helper method to fetch all files of a job from Qiita main.
+
+        Parameters
+        ----------
+        qclient : qiita_client.QiitaClient
+            The Qiita server client.
+        task_name : str
+            Name of the qiita command being executed. Here, to test
+            if == 'Validate'.
+        job_info : dict
+            Information about the job.
+
+        Function might update the provided job_info['parameters']['files']
+        values.
+        """
+        # "Validator" jobs operate on data that have not yet been
+        # registered as 'real' artifacts in qiita as this shall only happen
+        # iff validator commands pass. Hence, Validator commands don't use
+        # API calls to /qiita_db/artifacts/ to obtain file-paths. In these
+        # cases, files get fetched from qiita main with the following
+        # mechanism
+        if (task_name == 'Validate') and \
+           (qclient._plugincoupling != 'filesystem'):
+            if ('parameters' in job_info.keys()) and \
+               ('files' in job_info['parameters']):
+                logger.debug(
+                    ('Plugin::__call__: fetching artifact candidate file '
+                        'from central %s') % job_info['parameters']['files'])
+                job_info['parameters']['files'] = dumps(
+                    {filetype: [qclient.fetch_file_from_central(fp)
+                                for fp
+                                in fps]
+                     for filetype, fps
+                     in loads(job_info['parameters']['files']).items()})
+
     def __call__(self, server_url, job_id, output_dir):
         """Runs the plugin and executed the assigned task
 
@@ -315,6 +390,10 @@ class BaseQiitaPlugin(object):
             if not exists(output_dir):
                 makedirs(output_dir)
             try:
+                # for uncoupled plugins: fetch job files, otherwise do nothing
+                if qclient._plugincoupling != 'filesystem':
+                    self._fetch_job_files(qclient, task_name, job_info)
+
                 success, artifacts_info, error_msg = task(
                     qclient, job_id, job_info['parameters'], output_dir)
             except Exception:

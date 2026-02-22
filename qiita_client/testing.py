@@ -11,6 +11,7 @@ from os import environ
 from time import sleep
 
 from qiita_client import QiitaClient
+from .plugin import BaseQiitaPlugin
 
 import logging
 
@@ -36,6 +37,24 @@ class PluginTestCase(TestCase):
         logger.debug(
             'PluginTestCase.setUpClass() token %s' % cls.qclient._token)
         cls.qclient.post('/apitest/reload_plugins/')
+
+        # When testing, we access plugin functions often directly. Plugin
+        # configuration files are not parsed in these cases. To be able to
+        # change the plugin coupling protocol, we resort to the environment
+        # variable here.
+        cls.qclient._plugincoupling = environ.get(
+            'QIITA_PLUGINCOUPLING', BaseQiitaPlugin._DEFAULT_PLUGIN_COUPLINGS)
+
+        # Determine BASE_DATA_DIR of qiita central, without having direct
+        # access to qiita's settings file. This is done by requesting
+        # information about prep 1, which should be in the test database.
+        # This might break IF file
+        #    qiita-spots/qiita/qiita_db/support_files/populate_test_db.sql
+        # changes.
+        prep_info = cls.qclient.get('/qiita_db/prep_template/1/',
+                                    no_file_fetching=True)
+        cls.base_data_dir = prep_info['prep-file'].split('templates/')[0]
+
         # Give enough time for the plugins to register
         sleep(5)
 
