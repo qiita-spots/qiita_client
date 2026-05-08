@@ -945,12 +945,19 @@ class QiitaClient(object):
         chunk_size : int
             Maximum size in byte for a chunk.
         """
-        total_chunks = math.ceil(os.path.getsize(filepath) / chunk_size)
+        # max 1, because a plugin might want to send empty files, like in tests
+        # for qtp-job-output-folder
+        total_chunks = max(
+            1,
+            math.ceil(os.path.getsize(filepath) / chunk_size))
         current_chunk = 1
         with open(filepath, "rb") as f:
             while True:
                 chunk = f.read(chunk_size)
-                if not chunk:
+                if (not chunk) and (current_chunk > 1):
+                    # end sending chunks if file does not yield more data
+                    # edge case: plugin wants to send an empty file, therefore
+                    # send at least one chunk
                     break
                 self.post(
                     '/cloud/push_file_to_central/',
